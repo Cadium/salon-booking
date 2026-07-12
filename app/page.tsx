@@ -5,6 +5,7 @@ import { PhilosophySection } from "@/components/philosophy-section";
 import { ServiceMenuSection } from "@/components/service-menu-section";
 import { BraidersSection } from "@/components/braiders-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
+import { BookSection } from "@/components/book-section";
 import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
         <ServiceMenuSection />
         <BraidersSection />
         <TestimonialsSection />
+        <BookSection />
       </main>
       <SiteFooter />
     </>

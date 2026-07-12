@@ -18,13 +18,13 @@ export function HeroSection() {
             BLACK-OWNED · DALLAS, TX · EST. 2018
           </p>
 
-          <h1 className="font-display text-5xl leading-[0.95] tracking-tight md:text-7xl">
+          <h1 className="font-display text-5xl leading-[0.95] tracking-[-0.02em] md:text-7xl">
             Your crown,
             <br />
             <em className="text-copper italic">handled with care.</em>
           </h1>
 
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+          <p className="hero-description mt-6 max-w-md text-lg text-muted-foreground">
             Kindred is a home-based braiding studio in South Dallas — one
             guest at a time, gentle tension, and clean parts. In-studio or
             in-home appointments across the DFW metroplex.

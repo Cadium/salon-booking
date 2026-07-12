@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 
@@ -131,11 +132,8 @@ export function ReservationForm() {
         </div>
       </fieldset>
 
-      <div className="flex flex-col gap-2 md:max-w-xs">
-        <label htmlFor="date" className={labelClasses}>
-          Preferred date
-        </label>
-        <input id="date" type="date" name="date" className={inputClasses} />
+      <div className="md:max-w-xs">
+        <DatePicker id="date" name="date" label="Preferred date" />
       </div>
 
       <div className="flex flex-col gap-2">

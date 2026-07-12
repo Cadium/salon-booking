@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { services } from "@/lib/services";
-import { braiders } from "@/lib/braiders";
-import { SubmitButton } from "@/components/ui/button";
+import { SubmitButton, ButtonArrow } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 
@@ -132,24 +132,8 @@ export function ReservationForm() {
         </div>
       </fieldset>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="date" className={labelClasses}>
-            Preferred date
-          </label>
-          <input id="date" type="date" name="date" className={inputClasses} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="stylist" className={labelClasses}>
-            Braider
-          </label>
-          <select id="stylist" name="stylist" className={inputClasses}>
-            <option>No preference</option>
-            {braiders.map((braider) => (
-              <option key={braider.number}>{braider.name}</option>
-            ))}
-          </select>
-        </div>
+      <div className="md:max-w-xs">
+        <DatePicker id="date" name="date" label="Preferred date" />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -168,7 +152,7 @@ export function ReservationForm() {
       <div className="flex flex-col items-start gap-4">
         <SubmitButton>
           Send request
-          <span aria-hidden>↗</span>
+          <ButtonArrow>↗</ButtonArrow>
         </SubmitButton>
         <p className="text-sm text-muted-foreground">
           We reply within one business day. A non-refundable deposit holds

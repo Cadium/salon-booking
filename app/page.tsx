@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/hero-section";
 import { Ticker } from "@/components/ticker";
 import { PhilosophySection } from "@/components/philosophy-section";
 import { ServiceMenuSection } from "@/components/service-menu-section";
-import { BraidersSection } from "@/components/braiders-section";
+import { FounderSpotlight } from "@/components/founder-spotlight";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { BookSection } from "@/components/book-section";
 import { SiteFooter } from "@/components/site-footer";
@@ -17,7 +17,7 @@ export default function Home() {
         <Ticker />
         <PhilosophySection />
         <ServiceMenuSection />
-        <BraidersSection />
+        <FounderSpotlight />
         <TestimonialsSection />
         <BookSection />
       </main>

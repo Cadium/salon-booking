@@ -1,12 +1,30 @@
+import Image from "next/image";
 import type { Service } from "@/lib/services";
 
-export function ServiceCard({ number, name, priceFrom, duration, description }: Service) {
+export function ServiceCard({
+  number,
+  name,
+  priceFrom,
+  duration,
+  description,
+  image,
+  imageAlt,
+}: Service) {
   return (
     <article className="service-card group">
-      <p className="text-xs tracking-[0.2em] text-muted-foreground">
-        {number}
-      </p>
-      <h3 className="mt-3 font-display text-2xl">{name}</h3>
+      <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <Image
+          src={image}
+          alt={imageAlt}
+          fill
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          sizes="(min-width: 768px) 33vw, 100vw"
+        />
+        <span className="absolute top-4 left-4 bg-cream/90 px-2.5 py-1 text-xs tracking-[0.2em] text-copper">
+          {number}
+        </span>
+      </div>
+      <h3 className="mt-5 font-display text-2xl">{name}</h3>
       <p className="mt-2 text-sm text-muted-foreground">
         {priceFrom} · {duration}
       </p>

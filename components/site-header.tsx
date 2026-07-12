@@ -3,7 +3,7 @@ import { LinkButton } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "#services", label: "Services" },
-  { href: "#stylists", label: "Braiders" },
+  { href: "#braider", label: "Your Braider" },
   { href: "#philosophy", label: "Philosophy" },
   { href: "#book", label: "Visit" },
 ];

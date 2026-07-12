@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { LinkButton } from "@/components/ui/button";
+import { LinkButton, ButtonArrow } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
@@ -33,7 +33,7 @@ export function HeroSection() {
           <div className="mt-8 flex flex-wrap items-center gap-6">
             <LinkButton href="#book" variant="primary">
               Book your braids
-              <span aria-hidden>↗</span>
+              <ButtonArrow>↗</ButtonArrow>
             </LinkButton>
             <a
               href="#services"

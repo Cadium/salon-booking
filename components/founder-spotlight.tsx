@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { LinkButton } from "@/components/ui/button";
+import { LinkButton, ButtonArrow } from "@/components/ui/button";
 
 const CREDENTIALS = [
   { value: "12 yrs", label: "braiding, hands-on" },
@@ -56,7 +56,7 @@ export function FounderSpotlight() {
           <div className="mt-10">
             <LinkButton href="#book" variant="primary">
               Book with Dae
-              <span aria-hidden>↗</span>
+              <ButtonArrow>↗</ButtonArrow>
             </LinkButton>
           </div>
         </div>

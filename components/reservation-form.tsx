@@ -34,33 +34,42 @@ export function ReservationForm() {
       className="flex flex-col gap-8"
     >
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <label className="flex flex-col gap-2">
-          <span className={labelClasses}>Your name</span>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="name" className={labelClasses}>
+            Your name
+          </label>
           <input
+            id="name"
             type="text"
             name="name"
             placeholder="Dominique Ellis"
             className={inputClasses}
           />
-        </label>
-        <label className="flex flex-col gap-2">
-          <span className={labelClasses}>Email</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="email" className={labelClasses}>
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             name="email"
             placeholder="you@email.com"
             className={inputClasses}
           />
-        </label>
-        <label className="flex flex-col gap-2">
-          <span className={labelClasses}>Phone</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="phone" className={labelClasses}>
+            Phone
+          </label>
           <input
+            id="phone"
             type="tel"
             name="phone"
             placeholder="(214) 555 0123"
             className={inputClasses}
           />
-        </label>
+        </div>
       </div>
 
       <fieldset className="flex flex-col gap-3">
@@ -104,30 +113,37 @@ export function ReservationForm() {
       </fieldset>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <label className="flex flex-col gap-2">
-          <span className={labelClasses}>Preferred date</span>
-          <input type="date" name="date" className={inputClasses} />
-        </label>
-        <label className="flex flex-col gap-2">
-          <span className={labelClasses}>Braider</span>
-          <select name="stylist" className={inputClasses}>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="date" className={labelClasses}>
+            Preferred date
+          </label>
+          <input id="date" type="date" name="date" className={inputClasses} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="stylist" className={labelClasses}>
+            Braider
+          </label>
+          <select id="stylist" name="stylist" className={inputClasses}>
             <option>No preference</option>
             {braiders.map((braider) => (
               <option key={braider.number}>{braider.name}</option>
             ))}
           </select>
-        </label>
+        </div>
       </div>
 
-      <label className="flex flex-col gap-2">
-        <span className={labelClasses}>Anything we should know?</span>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="notes" className={labelClasses}>
+          Anything we should know?
+        </label>
         <textarea
+          id="notes"
           name="notes"
           rows={4}
           placeholder="Length, size, hair type, inspo pics, kids' ages, event date…"
           className={inputClasses}
         />
-      </label>
+      </div>
 
       <div className="flex flex-col items-start gap-4">
         <SubmitButton>

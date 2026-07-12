@@ -5,9 +5,6 @@ export const metadata: Metadata = {
   title: "Kindred Braid Studio — Black-Owned Braiding in Garland, TX",
   description:
     "Kindred is a home-based braiding studio in Garland — one guest at a time, gentle tension, and clean parts. In-studio or in-home appointments across the DFW metroplex.",
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({

@@ -10,9 +10,19 @@ const LOCATIONS = ["In-studio (South Dallas)", "In-home (DFW)"];
 const labelClasses = "text-xs font-medium uppercase tracking-[0.2em] text-copper";
 const inputClasses =
   "w-full border-0 border-b border-border bg-transparent py-2 text-base placeholder:text-muted-foreground/60 focus:border-copper focus:outline-none";
+const pillBaseClasses =
+  "cursor-pointer border border-border px-4 py-2 text-sm transition-colors";
+const pillSelectedStyle = {
+  borderColor: "var(--copper)",
+  color: "var(--copper)",
+} as const;
 
 export function ReservationForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(
+    null,
+  );
 
   if (submitted) {
     return (
@@ -78,12 +88,17 @@ export function ReservationForm() {
           {services.map((service) => (
             <label
               key={service.name}
-              className="cursor-pointer border border-border px-4 py-2 text-sm transition-colors has-[:checked]:border-copper has-[:checked]:text-copper"
+              className={pillBaseClasses}
+              style={
+                selectedService === service.name ? pillSelectedStyle : undefined
+              }
             >
               <input
                 type="radio"
                 name="service"
                 value={service.name}
+                checked={selectedService === service.name}
+                onChange={() => setSelectedService(service.name)}
                 className="sr-only"
               />
               {service.name}
@@ -98,12 +113,17 @@ export function ReservationForm() {
           {LOCATIONS.map((location) => (
             <label
               key={location}
-              className="cursor-pointer border border-border px-4 py-2 text-sm transition-colors has-[:checked]:border-copper has-[:checked]:text-copper"
+              className={pillBaseClasses}
+              style={
+                selectedLocation === location ? pillSelectedStyle : undefined
+              }
             >
               <input
                 type="radio"
                 name="location"
                 value={location}
+                checked={selectedLocation === location}
+                onChange={() => setSelectedLocation(location)}
                 className="sr-only"
               />
               {location}

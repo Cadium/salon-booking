@@ -15,7 +15,7 @@ const VARIANT_MARKER = {
 } as const;
 
 const baseClasses =
-  "inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium transition-colors cursor-pointer";
+  "inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-normal transition-colors";
 
 type LinkButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
@@ -32,7 +32,7 @@ export function LinkButton({
   return (
     <Link
       href={href}
-      className={`${baseClasses} ${VARIANT_MARKER[variant]} ${VARIANT_CLASSES[variant]} ${className}`}
+      className={`${baseClasses} cursor-pointer ${VARIANT_MARKER[variant]} ${VARIANT_CLASSES[variant]} ${className}`}
       {...props}
     >
       {children}

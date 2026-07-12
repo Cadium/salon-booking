@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kindred Braid Studio
 
-## Getting Started
+A single-page marketing and booking site for Kindred Braid Studio, a home-based braiding studio in Garland, TX. Built with Next.js App Router, TypeScript, and Tailwind CSS v4.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Tailwind CSS v4** — design tokens declared as CSS custom properties in `app/globals.css` (`@theme inline`), authored in OKLCH
+- Self-hosted **Inter** and **Fraunces** (variable, italic + normal)
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build   # production build
+npm run start   # serve the production build
+npm run lint    # eslint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
 
-## Learn More
+```
+app/
+  layout.tsx        Root layout, metadata, font loading
+  globals.css        Design tokens (colors, type, spacing) — single source of truth
+  page.tsx           Composes the page from section components
+components/
+  site-header.tsx     Sticky nav
+  site-footer.tsx
+  hero-section.tsx
+  ticker.tsx           CSS-marquee style-tag strip
+  philosophy-section.tsx
+  service-menu-section.tsx / service-card.tsx
+  book-section.tsx     Visit info + reservation form
+  reservation-form.tsx
+  ui/button.tsx        Shared button primitive
+lib/
+  services.ts          Service menu data
+public/
+  fonts/                Self-hosted Inter + Fraunces (woff2)
+  images/                Studio and service photography
+```
 
-To learn more about Next.js, take a look at the following resources:
+Repeated content (service cards) is driven by a typed data array in `lib/`, not copy-pasted markup.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Design tokens
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+All brand colors, type, spacing, and radius values live in `app/globals.css` as CSS custom properties and are mapped into Tailwind's `@theme`. Change a token there and it propagates everywhere — components should never hardcode a color, font size, or radius.
 
-## Deploy on Vercel
+## Conventions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Conventional commits (`feat:`, `fix:`, `chore:`, `style:`, `refactor:`, `docs:`, `test:`)
+- One feature branch per logical unit of work, PR against `main`

@@ -7,4 +7,6 @@ dist/
 .env.local
 .DS_Store
 clone-workspace/
-.claude/skills/
+.claude/
+AGENTS.md
+CLAUDE.md

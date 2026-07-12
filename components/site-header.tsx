@@ -15,7 +15,7 @@ export function SiteHeader() {
         <Link href="/" className="flex items-baseline gap-2 text-base">
           <span className="font-display text-lg">Kindred Braid Studio</span>
           <span className="text-xs tracking-wide text-muted-foreground">
-            DALLAS · EST. 2018
+            GARLAND · EST. 2018
           </span>
         </Link>
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { services } from "@/lib/services";
-import { SubmitButton } from "@/components/ui/button";
+import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 
 const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 
@@ -154,7 +154,7 @@ export function ReservationForm() {
       <div className="flex flex-col items-start gap-4">
         <SubmitButton>
           Send request
-          <span aria-hidden>↗</span>
+          <ButtonArrow>↗</ButtonArrow>
         </SubmitButton>
         <p className="text-sm text-muted-foreground">
           We reply within one business day. A non-refundable deposit holds

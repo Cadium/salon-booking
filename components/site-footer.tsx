@@ -12,7 +12,7 @@ export function SiteFooter() {
           <p className="font-display text-base text-foreground">
             Kindred Braid Studio
           </p>
-          <p>Black-owned · Dallas, TX</p>
+          <p>Black-owned · Garland, TX</p>
           <p>© {new Date().getFullYear()} Kindred Braid Studio. All rights reserved.</p>
         </div>
         <div className="flex gap-6">

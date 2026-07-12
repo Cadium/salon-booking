@@ -5,7 +5,7 @@ import { services } from "@/lib/services";
 import { braiders } from "@/lib/braiders";
 import { SubmitButton } from "@/components/ui/button";
 
-const LOCATIONS = ["In-studio (South Dallas)", "In-home (DFW)"];
+const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 
 const labelClasses = "text-xs font-medium uppercase tracking-[0.2em] text-copper";
 const inputClasses =

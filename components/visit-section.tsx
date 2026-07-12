@@ -2,7 +2,7 @@ const COLUMNS = [
   {
     heading: "STUDIO",
     lines: [
-      "Home studio, South Dallas",
+      "Home studio, Garland",
       "Full address sent after booking",
       "Tue – Sat · 8am – 8pm",
     ],
@@ -14,7 +14,7 @@ const COLUMNS = [
   {
     heading: "IN-HOME SERVICE",
     lines: [
-      "Mobile appointments available across Dallas, Plano, Frisco, Arlington, Irving, and surrounding DFW. A small travel fee applies past 20 miles from the studio.",
+      "Mobile appointments available across Garland, Rowlett, Mesquite, Sachse, Richardson, and surrounding DFW. A small travel fee applies past 20 miles from the studio.",
     ],
   },
 ];

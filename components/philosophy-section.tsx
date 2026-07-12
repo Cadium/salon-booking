@@ -27,8 +27,8 @@ export function PhilosophySection() {
         <div className="flex flex-col justify-center gap-6">
           <p className="text-muted-foreground">
             Kindred started at Dae&apos;s kitchen table in 2018 and grew into
-            a warm home studio in South Dallas. We book one client at a time
-            so the parts are precise, the tension is gentle, and you can
+            a warm home studio in Garland. We book one client at a time so
+            the parts are precise, the tension is gentle, and you can
             actually rest while you&apos;re in the chair.
           </p>
           <p className="text-muted-foreground">

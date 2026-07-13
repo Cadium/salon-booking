@@ -1,3 +1,5 @@
+import { RevealGroup } from "@/components/motion/reveal-group";
+
 const TESTIMONIALS = [
   {
     number: "Nº 01",
@@ -16,7 +18,11 @@ const TESTIMONIALS = [
 export function TestimonialsSection() {
   return (
     <section className="testimonials bg-espresso text-cream">
-      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 py-20 md:grid-cols-2 md:px-10">
+      <RevealGroup
+        y={20}
+        stagger={0.2}
+        className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 py-20 md:grid-cols-2 md:px-10"
+      >
         {TESTIMONIALS.map((t) => (
           <div key={t.number}>
             <p className="text-xs tracking-[0.2em] text-cream/60">
@@ -28,7 +34,7 @@ export function TestimonialsSection() {
             <p className="mt-4 text-sm text-cream/70">— {t.attribution}</p>
           </div>
         ))}
-      </div>
+      </RevealGroup>
     </section>
   );
 }

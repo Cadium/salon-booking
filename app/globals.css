@@ -104,17 +104,6 @@
   --color-ink: var(--ink);
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
-
-  --animate-marquee: marquee 40s linear infinite;
-
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
 }
 
 html {

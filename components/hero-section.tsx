@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { LinkButton, ButtonArrow } from "@/components/ui/button";
+import { ContactIcons } from "@/components/contact-icons";
 import { gsap } from "@/lib/gsap";
 
 const prefersReducedMotion = () =>
@@ -16,6 +17,7 @@ export function HeroSection() {
   const lineTwoRef = useRef<HTMLElement>(null);
   const bodyRef = useRef<HTMLParagraphElement>(null);
   const ctasRef = useRef<HTMLDivElement>(null);
+  const contactIconsRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
   const sideLabelRef = useRef<HTMLSpanElement>(null);
@@ -31,6 +33,7 @@ export function HeroSection() {
         .set([lineOneRef.current, lineTwoRef.current], { opacity: 0, y: 28 })
         .set(bodyRef.current, { opacity: 0 })
         .set(ctasRef.current, { opacity: 0 })
+        .set(contactIconsRef.current, { opacity: 0 })
         .set(imageRef.current, { opacity: 0, scale: 1.06 })
         .set(badgeRef.current, { opacity: 0, y: 10 })
         .set(sideLabelRef.current, { opacity: 0 })
@@ -40,6 +43,7 @@ export function HeroSection() {
         .to(lineTwoRef.current, { opacity: 1, y: 0, duration: 0.8 }, 0.4)
         .to(bodyRef.current, { opacity: 1, duration: 0.6 }, 0.65)
         .to(ctasRef.current, { opacity: 1, duration: 0.6 }, 0.78)
+        .to(contactIconsRef.current, { opacity: 1, duration: 0.6 }, 0.9)
         .to(
           imageRef.current,
           { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out" },
@@ -106,6 +110,10 @@ export function HeroSection() {
             >
               View the menu
             </a>
+          </div>
+
+          <div ref={contactIconsRef} className="mt-6">
+            <ContactIcons />
           </div>
         </div>
 

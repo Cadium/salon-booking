@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LinkButton, ButtonArrow } from "@/components/ui/button";
+import { BrandWordmark } from "@/components/brand-wordmark";
 
 const NAV_LINKS = [
   { href: "#services", label: "Services" },
@@ -36,9 +37,7 @@ export function SiteHeader() {
             className="flex flex-col gap-0.5 leading-none md:flex-row md:items-baseline md:gap-2"
             onClick={() => setMenuOpen(false)}
           >
-            <span className="font-display text-lg whitespace-nowrap">
-              Kindred Braid Studio
-            </span>
+            <BrandWordmark className="text-lg whitespace-nowrap" />
             <span className="text-xs tracking-wide whitespace-nowrap text-muted-foreground">
               GARLAND · EST. 2018
             </span>

@@ -90,8 +90,8 @@ export function HeroSection() {
             ref={bodyRef}
             className="hero-description mt-6 max-w-md text-lg text-bone/75"
           >
-            Kindred is a home-based braiding studio in Garland — one guest
-            at a time, gentle tension, and clean parts. In-studio or
+            HAIRBYBELLES is a home-based braiding studio in Garland — one
+            guest at a time, gentle tension, and clean parts. In-studio or
             in-home appointments across the DFW metroplex.
           </p>
 

@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import type { Service } from "@/lib/services";
+import { useBookingSelection } from "@/lib/booking-selection-context";
 
 export function ServiceCard({
   number,
@@ -10,6 +13,8 @@ export function ServiceCard({
   image,
   imageAlt,
 }: Service) {
+  const { setSelectedService } = useBookingSelection();
+
   return (
     <article className="service-card group">
       <div className="relative aspect-[4/5] w-full overflow-hidden">
@@ -33,6 +38,7 @@ export function ServiceCard({
       </p>
       <a
         href="#book"
+        onClick={() => setSelectedService(name)}
         className="reserve-link mt-5 inline-flex items-center gap-2 border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
       >
         Reserve

@@ -9,10 +9,11 @@ import { HowItWorksSection } from "@/components/how-it-works-section";
 import { PoliciesSection } from "@/components/policies-section";
 import { BookSection } from "@/components/book-section";
 import { SiteFooter } from "@/components/site-footer";
+import { BookingSelectionProvider } from "@/lib/booking-selection-context";
 
 export default function Home() {
   return (
-    <>
+    <BookingSelectionProvider>
       <SiteHeader />
       <main>
         <HeroSection />
@@ -26,6 +27,6 @@ export default function Home() {
         <BookSection />
       </main>
       <SiteFooter />
-    </>
+    </BookingSelectionProvider>
   );
 }

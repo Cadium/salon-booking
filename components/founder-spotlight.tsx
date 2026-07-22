@@ -36,7 +36,7 @@ export function FounderSpotlight() {
               Every single appointment.
             </h2>
             <p className="mt-6 max-w-lg text-muted-foreground">
-              Dominique &ldquo;Dae&rdquo; Ellis has spent twelve years
+              Kikelomo Fasogbon has spent twelve years
               training in knotless, boho, and protective styles gentle
               enough for a two-hour nap in the chair. There&apos;s no team,
               no apprentices, no hand-offs — every booking on this site is
@@ -66,7 +66,7 @@ export function FounderSpotlight() {
 
           <div className="mt-10">
             <LinkButton href="#book" variant="primary">
-              Book with Dae
+              Book with Kikelomo
               <ButtonArrow>↗</ButtonArrow>
             </LinkButton>
           </div>

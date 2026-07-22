@@ -30,7 +30,7 @@ export function PhilosophySection() {
 
         <Reveal delay={0.15} className="flex flex-col justify-center gap-6">
           <p className="text-muted-foreground">
-            HAIRBYBELLES started at Dae&apos;s kitchen table in 2018 and grew into
+            HAIRBYBELLES started at Kikelomo&apos;s kitchen table in 2018 and grew into
             a warm home studio in Garland. We book one client at a time so
             the parts are precise, the tension is gentle, and you can
             actually rest while you&apos;re in the chair.

@@ -5,6 +5,8 @@ import { PhilosophySection } from "@/components/philosophy-section";
 import { ServiceMenuSection } from "@/components/service-menu-section";
 import { FounderSpotlight } from "@/components/founder-spotlight";
 import { TestimonialsSection } from "@/components/testimonials-section";
+import { HowItWorksSection } from "@/components/how-it-works-section";
+import { PoliciesSection } from "@/components/policies-section";
 import { BookSection } from "@/components/book-section";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -19,6 +21,8 @@ export default function Home() {
         <ServiceMenuSection />
         <FounderSpotlight />
         <TestimonialsSection />
+        <HowItWorksSection />
+        <PoliciesSection />
         <BookSection />
       </main>
       <SiteFooter />

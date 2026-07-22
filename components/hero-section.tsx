@@ -53,11 +53,15 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section id="top" ref={rootRef} className="relative overflow-hidden">
+    <section
+      id="top"
+      ref={rootRef}
+      className="relative overflow-hidden bg-ink-plum"
+    >
       <span
         ref={sideLabelRef}
         aria-hidden
-        className="absolute right-3 top-0 hidden -translate-y-1/2 rotate-180 text-xs tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] md:block"
+        className="absolute right-3 top-0 hidden -translate-y-1/2 rotate-180 text-xs tracking-[0.3em] text-rose-pop/60 [writing-mode:vertical-rl] md:block"
       >
         Nº 007 — BRAIDED WITH INTENTION
       </span>
@@ -66,25 +70,25 @@ export function HeroSection() {
         <div className="flex flex-col justify-center">
           <p
             ref={eyebrowRef}
-            className="mb-6 flex items-center gap-3 text-xs tracking-[0.2em] text-magenta"
+            className="mb-6 flex items-center gap-3 text-xs tracking-[0.2em] text-rose-pop"
           >
-            <span aria-hidden className="h-px w-8 bg-magenta" />
+            <span aria-hidden className="h-px w-8 bg-rose-pop" />
             BLACK-OWNED · GARLAND, TX · EST. 2018
           </p>
 
-          <h1 className="font-display text-5xl leading-[0.95] tracking-[-0.02em] md:text-7xl">
+          <h1 className="font-display text-5xl leading-[0.95] tracking-[-0.02em] text-bone md:text-7xl">
             <span ref={lineOneRef} className="inline-block">
               Your crown,
             </span>
             <br />
-            <em ref={lineTwoRef} className="inline-block text-magenta italic">
+            <em ref={lineTwoRef} className="inline-block text-rose-pop italic">
               handled with care.
             </em>
           </h1>
 
           <p
             ref={bodyRef}
-            className="hero-description mt-6 max-w-md text-lg text-muted-foreground"
+            className="hero-description mt-6 max-w-md text-lg text-bone/75"
           >
             Kindred is a home-based braiding studio in Garland — one guest
             at a time, gentle tension, and clean parts. In-studio or
@@ -92,13 +96,13 @@ export function HeroSection() {
           </p>
 
           <div ref={ctasRef} className="mt-8 flex flex-wrap items-center gap-6">
-            <LinkButton href="#book" variant="primary">
+            <LinkButton href="#book" variant="inverse">
               Book your braids
               <ButtonArrow>↗</ButtonArrow>
             </LinkButton>
             <a
               href="#services"
-              className="reserve-link border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
+              className="reserve-link border-b border-bone/40 pb-1 text-sm text-bone transition-colors hover:border-rose-pop hover:text-rose-pop"
             >
               View the menu
             </a>

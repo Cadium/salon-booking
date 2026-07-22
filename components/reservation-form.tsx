@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useBookingSelection } from "@/lib/booking-selection-context";
 
 const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_WEB_APP_URL;
@@ -61,7 +62,7 @@ export function ReservationForm() {
   const [submitted, setSubmitted] = useState(false);
   const [errored, setErrored] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const { selectedService, setSelectedService } = useBookingSelection();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(
     null,
   );

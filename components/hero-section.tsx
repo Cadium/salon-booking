@@ -66,9 +66,9 @@ export function HeroSection() {
         <div className="flex flex-col justify-center">
           <p
             ref={eyebrowRef}
-            className="mb-6 flex items-center gap-3 text-xs tracking-[0.2em] text-copper"
+            className="mb-6 flex items-center gap-3 text-xs tracking-[0.2em] text-magenta"
           >
-            <span aria-hidden className="h-px w-8 bg-copper" />
+            <span aria-hidden className="h-px w-8 bg-magenta" />
             BLACK-OWNED · GARLAND, TX · EST. 2018
           </p>
 
@@ -77,7 +77,7 @@ export function HeroSection() {
               Your crown,
             </span>
             <br />
-            <em ref={lineTwoRef} className="inline-block text-copper italic">
+            <em ref={lineTwoRef} className="inline-block text-magenta italic">
               handled with care.
             </em>
           </h1>
@@ -98,7 +98,7 @@ export function HeroSection() {
             </LinkButton>
             <a
               href="#services"
-              className="reserve-link border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-copper hover:text-copper"
+              className="reserve-link border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
             >
               View the menu
             </a>
@@ -116,9 +116,9 @@ export function HeroSection() {
           />
           <div
             ref={badgeRef}
-            className="absolute bottom-6 left-6 bg-cream px-6 py-4"
+            className="absolute bottom-6 left-6 bg-bone px-6 py-4"
           >
-            <p className="text-xs tracking-[0.2em] text-copper">
+            <p className="text-xs tracking-[0.2em] text-magenta">
               NOW BOOKING
             </p>
             <p className="font-display text-lg">Studio &amp; mobile · DFW</p>

@@ -20,7 +20,7 @@ export function ServiceCard({
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           sizes="(min-width: 768px) 33vw, 100vw"
         />
-        <span className="absolute top-4 left-4 bg-cream/90 px-2.5 py-1 text-xs tracking-[0.2em] text-copper">
+        <span className="absolute top-4 left-4 bg-bone/90 px-2.5 py-1 text-xs tracking-[0.2em] text-magenta">
           {number}
         </span>
       </div>
@@ -33,7 +33,7 @@ export function ServiceCard({
       </p>
       <a
         href="#book"
-        className="reserve-link mt-5 inline-flex items-center gap-2 border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-copper hover:text-copper"
+        className="reserve-link mt-5 inline-flex items-center gap-2 border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
       >
         Reserve
         <span aria-hidden>→</span>

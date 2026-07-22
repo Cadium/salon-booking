@@ -87,7 +87,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
     <div ref={rootRef} className="relative flex flex-col gap-2">
       <label
         htmlFor={fieldId}
-        className="text-xs font-medium uppercase tracking-[0.2em] text-copper"
+        className="text-xs font-medium uppercase tracking-[0.2em] text-magenta"
       >
         {label}
       </label>
@@ -97,7 +97,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="flex w-full cursor-pointer items-center justify-between border-0 border-b border-border bg-transparent py-2 text-left text-base transition-colors focus-visible:border-copper focus-visible:outline-none"
+        className="flex w-full cursor-pointer items-center justify-between border-0 border-b border-border bg-transparent py-2 text-left text-base transition-colors focus-visible:border-magenta focus-visible:outline-none"
       >
         <span className={selected ? "text-foreground" : "text-muted-foreground/60"}>
           {selected ? formatDisplay(selected) : "Select a date"}
@@ -108,7 +108,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
           height="18"
           viewBox="0 0 24 24"
           fill="none"
-          className="shrink-0 text-copper"
+          className="shrink-0 text-magenta"
         >
           <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
           <path d="M3 9.5h18" stroke="currentColor" strokeWidth="1.5" />
@@ -123,7 +123,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
       <div
         role="dialog"
         aria-label="Choose a date"
-        className={`absolute top-full left-0 z-20 mt-2 w-[300px] origin-top-left border border-border/70 bg-cream p-5 shadow-[0_20px_40px_-12px_rgba(48,38,32,0.25)] transition-all duration-200 ease-out ${
+        className={`absolute top-full left-0 z-20 mt-2 w-[300px] origin-top-left border border-border/70 bg-bone p-5 shadow-[0_20px_40px_-12px_rgba(30,18,32,0.25)] transition-all duration-200 ease-out ${
           open
             ? "pointer-events-auto scale-100 opacity-100"
             : "pointer-events-none scale-95 opacity-0"
@@ -136,7 +136,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
             onClick={() =>
               setViewMonth(startOfDay(new Date(year, month - 1, 1)))
             }
-            className="cursor-pointer p-1 text-foreground transition-colors hover:text-copper"
+            className="cursor-pointer p-1 text-foreground transition-colors hover:text-magenta"
           >
             ‹
           </button>
@@ -149,7 +149,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
             onClick={() =>
               setViewMonth(startOfDay(new Date(year, month + 1, 1)))
             }
-            className="cursor-pointer p-1 text-foreground transition-colors hover:text-copper"
+            className="cursor-pointer p-1 text-foreground transition-colors hover:text-magenta"
           >
             ›
           </button>
@@ -179,11 +179,11 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
                 }}
                 className={`mx-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors ${
                   isSelected
-                    ? "bg-copper text-cream"
+                    ? "bg-magenta text-bone"
                     : isPast
                       ? "cursor-not-allowed text-muted-foreground/30"
-                      : "text-foreground hover:bg-copper/10"
-                } ${isToday && !isSelected ? "font-semibold text-copper" : ""}`}
+                      : "text-foreground hover:bg-magenta/10"
+                } ${isToday && !isSelected ? "font-semibold text-magenta" : ""}`}
               >
                 {day.getDate()}
               </button>

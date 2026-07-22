@@ -20,7 +20,7 @@ export function SiteFooter() {
             <a
               key={link.label}
               href={link.href}
-              className="transition-colors hover:text-copper"
+              className="transition-colors hover:text-magenta"
             >
               {link.label}
             </a>

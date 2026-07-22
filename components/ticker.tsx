@@ -41,7 +41,7 @@ export function Ticker() {
 
   return (
     <section
-      className="overflow-hidden border-y border-border/70 bg-bone/60"
+      className="overflow-hidden border-y border-border/70 bg-blush/60"
       onMouseEnter={() => tweenRef.current?.timeScale(0.15)}
       onMouseLeave={() => tweenRef.current?.timeScale(1)}
     >
@@ -52,7 +52,7 @@ export function Ticker() {
         {doubled.map((tag, i) => (
           <span key={`${tag}-${i}`} className="flex items-center gap-16">
             {tag}
-            <span aria-hidden className="text-copper">
+            <span aria-hidden className="text-magenta">
               ✻
             </span>
           </span>

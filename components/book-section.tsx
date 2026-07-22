@@ -13,7 +13,7 @@ export function BookSection() {
       </Reveal>
 
       <Reveal delay={0.1} className="mt-20 border-t border-border/70 pt-16">
-        <p className="mb-2 text-xs tracking-[0.2em] text-copper">RESERVE</p>
+        <p className="mb-2 text-xs tracking-[0.2em] text-magenta">RESERVE</p>
         <h2 className="mb-10 font-display text-3xl md:text-4xl">
           Request an appointment.
         </h2>

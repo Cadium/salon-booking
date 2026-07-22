@@ -13,7 +13,7 @@ const CREDENTIALS = [
 
 export function FounderSpotlight() {
   return (
-    <section id="braider" className="border-y border-border/70 bg-bone/50">
+    <section id="braider" className="border-y border-border/70 bg-blush/50">
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-10 px-6 py-24 md:grid-cols-2 md:gap-16 md:px-10 md:py-32">
         <ParallaxImage className="relative order-2 aspect-[4/5] w-full md:order-1">
           <Image
@@ -27,7 +27,7 @@ export function FounderSpotlight() {
 
         <div className="order-1 flex flex-col justify-center md:order-2">
           <Reveal>
-            <p className="mb-4 text-xs tracking-[0.2em] text-copper">
+            <p className="mb-4 text-xs tracking-[0.2em] text-magenta">
               YOUR BRAIDER
             </p>
             <h2 className="max-w-lg font-display text-3xl leading-tight md:text-4xl">
@@ -42,7 +42,7 @@ export function FounderSpotlight() {
               no apprentices, no hand-offs — every booking on this site is
               with her, personally.
             </p>
-            <p className="mt-6 max-w-lg font-display text-xl italic text-copper">
+            <p className="mt-6 max-w-lg font-display text-xl italic text-magenta">
               &ldquo;I only book one client a day, so I can actually be
               present for yours.&rdquo;
             </p>

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 
 const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
+const GAS_URL = process.env.NEXT_PUBLIC_GAS_WEB_APP_URL;
 
 const labelClasses = "text-xs font-medium uppercase tracking-[0.2em] text-magenta";
 const inputClasses =
@@ -17,12 +18,58 @@ const pillSelectedStyle = {
   color: "var(--magenta)",
 } as const;
 
+function UnavailableNotice() {
+  return (
+    <div className="border border-border/70 px-8 py-12 text-center">
+      <p className="font-display text-2xl">Booking requests aren&apos;t wired up yet.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Reach out directly at{" "}
+        <a href="mailto:hello@hairbybelles.co" className="text-magenta">
+          hello@hairbybelles.co
+        </a>{" "}
+        or{" "}
+        <a href="tel:+12145550142" className="text-magenta">
+          +1 (214) 555 0142
+        </a>
+        .
+      </p>
+    </div>
+  );
+}
+
+function ErrorNotice() {
+  return (
+    <div className="border border-destructive/40 px-8 py-12 text-center">
+      <p className="font-display text-2xl text-destructive">Something went wrong.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Your request may not have gone through. Please try again, or reach
+        out directly at{" "}
+        <a href="mailto:hello@hairbybelles.co" className="text-magenta">
+          hello@hairbybelles.co
+        </a>{" "}
+        or{" "}
+        <a href="tel:+12145550142" className="text-magenta">
+          +1 (214) 555 0142
+        </a>
+        .
+      </p>
+    </div>
+  );
+}
+
 export function ReservationForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [errored, setErrored] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(
     null,
   );
+  const iframeLoadCount = useRef(0);
+
+  if (!GAS_URL) {
+    return <UnavailableNotice />;
+  }
 
   if (submitted) {
     return (
@@ -35,12 +82,16 @@ export function ReservationForm() {
     );
   }
 
+  if (errored) {
+    return <ErrorNotice />;
+  }
+
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSubmitted(true);
-      }}
+      action={GAS_URL}
+      method="POST"
+      target="hairbybelles-reservation-frame"
+      onSubmit={() => setIsSubmitting(true)}
       className="flex flex-col gap-8"
     >
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -52,6 +103,7 @@ export function ReservationForm() {
             id="name"
             type="text"
             name="name"
+            required
             placeholder="Kikelomo Fasogbon"
             className={inputClasses}
           />
@@ -64,6 +116,7 @@ export function ReservationForm() {
             id="email"
             type="email"
             name="email"
+            required
             placeholder="you@email.com"
             className={inputClasses}
           />
@@ -97,6 +150,7 @@ export function ReservationForm() {
                 type="radio"
                 name="service"
                 value={service.name}
+                required
                 checked={selectedService === service.name}
                 onChange={() => setSelectedService(service.name)}
                 className="sr-only"
@@ -122,6 +176,7 @@ export function ReservationForm() {
                 type="radio"
                 name="location"
                 value={location}
+                required
                 checked={selectedLocation === location}
                 onChange={() => setSelectedLocation(location)}
                 className="sr-only"
@@ -150,15 +205,31 @@ export function ReservationForm() {
       </div>
 
       <div className="flex flex-col items-start gap-4">
-        <SubmitButton>
-          Send request
-          <ButtonArrow>↗</ButtonArrow>
+        <SubmitButton disabled={isSubmitting}>
+          {isSubmitting ? "Sending…" : "Send request"}
+          {!isSubmitting && <ButtonArrow>↗</ButtonArrow>}
         </SubmitButton>
         <p className="text-sm text-muted-foreground">
           We reply within one business day. A non-refundable deposit holds
           your slot and goes toward your total.
         </p>
       </div>
+
+      <iframe
+        name="hairbybelles-reservation-frame"
+        className="hidden"
+        onLoad={() => {
+          iframeLoadCount.current += 1;
+          if (iframeLoadCount.current > 1) {
+            setIsSubmitting(false);
+            setSubmitted(true);
+          }
+        }}
+        onError={() => {
+          setIsSubmitting(false);
+          setErrored(true);
+        }}
+      />
     </form>
   );
 }

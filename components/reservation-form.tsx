@@ -52,7 +52,7 @@ export function ReservationForm() {
             id="name"
             type="text"
             name="name"
-            placeholder="Dominique Ellis"
+            placeholder="Kikelomo Fasogbon"
             className={inputClasses}
           />
         </div>

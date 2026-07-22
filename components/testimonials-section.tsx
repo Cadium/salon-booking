@@ -4,7 +4,7 @@ const TESTIMONIALS = [
   {
     number: "Nº 01",
     quote:
-      "Dae took her time, my parts were perfection, and my scalp didn't hurt once. I've never had braids feel this light.",
+      "Kikelomo took her time, my parts were perfection, and my scalp didn't hurt once. I've never had braids feel this light.",
     attribution: "Aaliyah T., Oak Cliff",
   },
   {

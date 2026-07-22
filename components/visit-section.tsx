@@ -9,7 +9,7 @@ const COLUMNS = [
   },
   {
     heading: "CONTACT",
-    lines: ["hello@kindredbraids.co", "+1 (214) 555 0142", "@kindredbraids"],
+    lines: ["hello@hairbybelles.co", "+1 (214) 555 0142", "@hairbybelles"],
   },
   {
     heading: "IN-HOME SERVICE",

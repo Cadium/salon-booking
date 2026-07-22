@@ -17,7 +17,7 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
   return (
-    <section className="testimonials bg-espresso text-cream">
+    <section className="testimonials bg-ink-plum text-bone">
       <RevealGroup
         y={20}
         stagger={0.2}
@@ -25,13 +25,13 @@ export function TestimonialsSection() {
       >
         {TESTIMONIALS.map((t) => (
           <div key={t.number}>
-            <p className="text-xs tracking-[0.2em] text-cream/60">
+            <p className="text-xs tracking-[0.2em] text-bone/60">
               {t.number}
             </p>
             <p className="mt-4 font-display text-xl leading-relaxed italic">
               “{t.quote}”
             </p>
-            <p className="mt-4 text-sm text-cream/70">— {t.attribution}</p>
+            <p className="mt-4 text-sm text-bone/70">— {t.attribution}</p>
           </div>
         ))}
       </RevealGroup>

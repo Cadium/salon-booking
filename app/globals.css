@@ -29,52 +29,53 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Fraunces";
-  src: url("/fonts/fraunces-normal-variable.woff2") format("woff2");
-  font-weight: 300 600;
+  font-family: "Bodoni Moda";
+  src: url("/fonts/bodoni-moda-normal-variable.woff2") format("woff2");
+  font-weight: 400 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Fraunces";
-  src: url("/fonts/fraunces-italic-variable.woff2") format("woff2");
-  font-weight: 300 600;
+  font-family: "Bodoni Moda";
+  src: url("/fonts/bodoni-moda-italic-variable.woff2") format("woff2");
+  font-weight: 400 900;
   font-style: italic;
   font-display: swap;
 }
 
 :root {
-  /* Brand palette — original OKLCH values from the source design */
-  --cream: oklch(96.5% 0.018 82);
-  --bone: oklch(94% 0.02 82);
-  --espresso: oklch(24% 0.028 45);
-  --copper: oklch(58% 0.13 45);
-  --ink: oklch(22% 0.02 45);
+  /* Brand palette — Magenta Muse, authored directly (client-approved on screen) */
+  --magenta: #b3125f;
+  --ink-plum: #1e1220;
+  --bone: #fbf3f0;
+  --blush: #f7e4ea;
+  --gold: #c9a24b;
+  --rose-pop: #ff9dbd;
 
-  /* Semantic tokens (shadcn/ui-style naming, reused verbatim from source) */
-  --background: var(--cream);
-  --foreground: var(--espresso);
-  --card: oklch(98% 0.012 82);
-  --card-foreground: var(--espresso);
-  --popover: var(--cream);
-  --popover-foreground: var(--espresso);
-  --primary: var(--espresso);
-  --primary-foreground: var(--cream);
-  --secondary: var(--bone);
-  --secondary-foreground: var(--espresso);
-  --muted: oklch(92% 0.018 82);
-  --muted-foreground: oklch(45% 0.028 45);
-  --accent: var(--copper);
-  --accent-foreground: var(--cream);
+  /* Semantic tokens (shadcn/ui-style naming) */
+  --background: var(--bone);
+  --foreground: var(--ink-plum);
+  --card: oklch(98% 0.012 350);
+  --card-foreground: var(--ink-plum);
+  --popover: var(--bone);
+  --popover-foreground: var(--ink-plum);
+  --primary: var(--ink-plum);
+  --primary-foreground: var(--bone);
+  --secondary: var(--blush);
+  --secondary-foreground: var(--ink-plum);
+  --muted: oklch(92% 0.018 350);
+  --muted-foreground: oklch(45% 0.03 350);
+  --accent: var(--magenta);
+  --accent-foreground: var(--bone);
   --destructive: oklch(55% 0.2 27);
-  --destructive-foreground: var(--cream);
-  --border: oklch(88% 0.02 65);
-  --input: oklch(88% 0.02 65);
-  --ring: var(--copper);
+  --destructive-foreground: var(--bone);
+  --border: oklch(88% 0.02 350);
+  --input: oklch(88% 0.02 350);
+  --ring: var(--magenta);
   --radius: 0.5rem;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-display: "Bodoni Moda", ui-serif, Georgia, serif;
 }
 
 @theme inline {
@@ -97,11 +98,12 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-cream: var(--cream);
   --color-bone: var(--bone);
-  --color-espresso: var(--espresso);
-  --color-copper: var(--copper);
-  --color-ink: var(--ink);
+  --color-blush: var(--blush);
+  --color-ink-plum: var(--ink-plum);
+  --color-magenta: var(--magenta);
+  --color-gold: var(--gold);
+  --color-rose-pop: var(--rose-pop);
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
 }

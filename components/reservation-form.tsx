@@ -7,14 +7,14 @@ import { DatePicker } from "@/components/ui/date-picker";
 
 const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 
-const labelClasses = "text-xs font-medium uppercase tracking-[0.2em] text-copper";
+const labelClasses = "text-xs font-medium uppercase tracking-[0.2em] text-magenta";
 const inputClasses =
-  "w-full border-0 border-b border-border bg-transparent py-2 text-base placeholder:text-muted-foreground/60 focus:border-copper focus:outline-none";
+  "w-full border-0 border-b border-border bg-transparent py-2 text-base placeholder:text-muted-foreground/60 focus:border-magenta focus:outline-none";
 const pillBaseClasses =
   "cursor-pointer border border-border px-4 py-2 text-sm transition-colors";
 const pillSelectedStyle = {
-  borderColor: "var(--copper)",
-  color: "var(--copper)",
+  borderColor: "var(--magenta)",
+  color: "var(--magenta)",
 } as const;
 
 export function ReservationForm() {

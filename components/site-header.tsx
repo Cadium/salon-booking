@@ -49,10 +49,10 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="group relative py-1 text-foreground transition-colors hover:text-copper"
+                className="group relative py-1 text-foreground transition-colors hover:text-magenta"
               >
                 {link.label}
-                <span className="absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-copper transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                <span className="absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-magenta transition-transform duration-300 ease-out group-hover:scale-x-100" />
               </Link>
             ))}
           </nav>
@@ -82,7 +82,7 @@ export function SiteHeader() {
       </header>
 
       <div
-        className={`fixed inset-0 z-30 flex flex-col justify-center bg-cream transition-opacity duration-300 ease-out md:hidden ${
+        className={`fixed inset-0 z-30 flex flex-col justify-center bg-bone transition-opacity duration-300 ease-out md:hidden ${
           menuOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"

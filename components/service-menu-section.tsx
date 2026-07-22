@@ -5,10 +5,10 @@ import { RevealGroup } from "@/components/motion/reveal-group";
 
 export function ServiceMenuSection() {
   return (
-    <section id="services" className="border-y border-border/70 bg-bone/50">
+    <section id="services" className="border-y border-border/70 bg-blush/50">
       <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
         <Reveal>
-          <p className="mb-4 text-xs tracking-[0.2em] text-copper">
+          <p className="mb-4 text-xs tracking-[0.2em] text-magenta">
             THE MENU
           </p>
           <h2 className="max-w-xl font-display text-3xl leading-tight md:text-4xl">

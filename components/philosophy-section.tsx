@@ -16,7 +16,7 @@ export function PhilosophySection() {
     >
       <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-20">
         <Reveal>
-          <p className="mb-4 text-xs tracking-[0.2em] text-copper">
+          <p className="mb-4 text-xs tracking-[0.2em] text-magenta">
             OUR PHILOSOPHY
           </p>
           <h2 className="font-display text-3xl leading-tight md:text-4xl">
@@ -49,7 +49,7 @@ export function PhilosophySection() {
       >
         {STATS.map((stat) => (
           <div key={stat.label}>
-            <dt className="font-display text-4xl text-copper">
+            <dt className="font-display text-4xl text-magenta">
               <StatCounter value={stat.value} />
             </dt>
             <dd className="mt-1 text-sm text-muted-foreground">

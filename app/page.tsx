@@ -19,8 +19,8 @@ export default function Home() {
       <main>
         <HeroSection />
         <Ticker />
-        <PhilosophySection />
         <ServiceMenuSection />
+        <PhilosophySection />
         <FounderSpotlight />
         <TestimonialsSection />
         <FollowInstagramSection />

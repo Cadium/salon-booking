@@ -1,13 +1,13 @@
-# Kindred Braid Studio
+# HAIRBYBELLES
 
-A single-page marketing and booking site for Kindred Braid Studio, a home-based braiding studio in Garland, TX. Built with Next.js App Router, TypeScript, and Tailwind CSS v4.
+A single-page marketing and booking site for HAIRBYBELLES, a home-based braiding studio in Garland, TX. Built with Next.js App Router, TypeScript, and Tailwind CSS v4.
 
 ## Stack
 
 - **Next.js 16** (App Router)
 - **TypeScript**
-- **Tailwind CSS v4** — design tokens declared as CSS custom properties in `app/globals.css` (`@theme inline`), authored in OKLCH
-- Self-hosted **Inter** and **Fraunces** (variable, italic + normal)
+- **Tailwind CSS v4** — design tokens declared as CSS custom properties in `app/globals.css` (`@theme inline`); brand colors authored directly in hex, derived neutrals in OKLCH
+- Self-hosted **Inter** and **Bodoni Moda** (variable, italic + normal)
 
 ## Getting started
 
@@ -44,7 +44,7 @@ components/
 lib/
   services.ts          Service menu data
 public/
-  fonts/                Self-hosted Inter + Fraunces (woff2)
+  fonts/                Self-hosted Inter + Bodoni Moda (woff2)
   images/                Studio and service photography
 ```
 

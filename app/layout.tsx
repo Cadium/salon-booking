@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 const SITE_URL = "https://salon-booking-six-xi.vercel.app";
-const TITLE = "Kindred Braid Studio — Black-Owned Braiding in Garland, TX";
+const TITLE = "HAIRBYBELLES — Black-Owned Braiding in Garland, TX";
 const DESCRIPTION =
-  "Kindred is a home-based braiding studio in Garland — one guest at a time, gentle tension, and clean parts. In-studio or in-home appointments across the DFW metroplex.";
+  "HAIRBYBELLES is a home-based braiding studio in Garland — one guest at a time, gentle tension, and clean parts. In-studio or in-home appointments across the DFW metroplex.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
-    siteName: "Kindred Braid Studio",
+    siteName: "HAIRBYBELLES",
     locale: "en_US",
     type: "website",
     images: [

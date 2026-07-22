@@ -5,6 +5,7 @@ import { PhilosophySection } from "@/components/philosophy-section";
 import { ServiceMenuSection } from "@/components/service-menu-section";
 import { FounderSpotlight } from "@/components/founder-spotlight";
 import { TestimonialsSection } from "@/components/testimonials-section";
+import { FollowInstagramSection } from "@/components/follow-instagram-section";
 import { HowItWorksSection } from "@/components/how-it-works-section";
 import { PoliciesSection } from "@/components/policies-section";
 import { BookSection } from "@/components/book-section";
@@ -22,6 +23,7 @@ export default function Home() {
         <ServiceMenuSection />
         <FounderSpotlight />
         <TestimonialsSection />
+        <FollowInstagramSection />
         <HowItWorksSection />
         <PoliciesSection />
         <BookSection />

@@ -204,8 +204,8 @@ export function ReservationForm() {
           {!isSubmitting && <ButtonArrow>↗</ButtonArrow>}
         </SubmitButton>
         <p className="text-sm text-muted-foreground">
-          We reply within one business day. A non-refundable deposit holds
-          your slot and goes toward your total.
+          We reply within one business day. A $30 non-refundable deposit
+          holds your slot and goes toward your total.
         </p>
       </div>
 

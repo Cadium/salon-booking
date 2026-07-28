@@ -6,8 +6,11 @@
  * Sheet and emails a styled copy to the studio.
  *
  * SETUP
- *  1. Open a new Google Sheet (sheets.new). This sheet becomes the request log.
- *  2. Extensions > Apps Script. Delete the placeholder code, paste this in.
+ *  1. Create the script either way — from inside a Google Sheet
+ *     (Extensions > Apps Script) or standalone at script.google.com. If it is
+ *     standalone, the script creates its own log spreadsheet on the first
+ *     request and puts it in the same account's Drive.
+ *  2. Delete the placeholder code and paste this in.
  *  3. Change OWNER_EMAIL below to the inbox that should receive requests.
  *  4. Save, then Deploy > New deployment.
  *  5. Click the gear beside "Select type" and choose Web app.
@@ -52,7 +55,13 @@ function doPost(e) {
   var data = (e && e.parameter) || {};
   var received = new Date();
 
-  logToSheet(received, data);
+  // The email is the part that matters. Never let a spreadsheet problem stop
+  // the studio being told about a booking.
+  try {
+    logToSheet(received, data);
+  } catch (err) {
+    console.error("Could not write to the request log: " + err);
+  }
 
   MailApp.sendEmail({
     to: OWNER_EMAIL,
@@ -74,8 +83,40 @@ function buildSubject(data) {
     : "New booking request — " + who;
 }
 
+/**
+ * Finds the sheet to log into, whichever way the script was set up.
+ *
+ *  - Script created from inside a Sheet (Extensions > Apps Script): uses it.
+ *  - Standalone script (script.google.com): creates its own log spreadsheet
+ *    the first time and remembers it, so no manual linking is needed.
+ *
+ * getActiveSpreadsheet() returns null for standalone scripts, which is what
+ * made the whole notification fail before this fallback existed.
+ */
+function getLogSheet() {
+  var bound = SpreadsheetApp.getActiveSpreadsheet();
+  if (bound) return bound.getSheets()[0];
+
+  var props = PropertiesService.getScriptProperties();
+  var savedId = props.getProperty("LOG_SPREADSHEET_ID");
+
+  if (savedId) {
+    try {
+      return SpreadsheetApp.openById(savedId).getSheets()[0];
+    } catch (err) {
+      // Deleted or inaccessible — fall through and make a fresh one.
+      console.warn("Saved log spreadsheet unavailable, creating a new one.");
+    }
+  }
+
+  var created = SpreadsheetApp.create(STUDIO_NAME + " — booking requests");
+  props.setProperty("LOG_SPREADSHEET_ID", created.getId());
+  console.info("Created request log: " + created.getUrl());
+  return created.getSheets()[0];
+}
+
 function logToSheet(received, data) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = getLogSheet();
 
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(SHEET_HEADERS);

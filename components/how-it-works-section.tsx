@@ -18,7 +18,7 @@ const STEPS = [
     number: "03",
     title: "Hold your spot",
     description:
-      "A small non-refundable deposit secures your appointment and comes off your total.",
+      "A $30 non-refundable deposit secures your appointment and comes off your total.",
   },
   {
     number: "04",

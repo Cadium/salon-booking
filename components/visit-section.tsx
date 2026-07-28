@@ -11,7 +11,7 @@ const COLUMNS = [
   },
   {
     heading: "CONTACT",
-    lines: [STUDIO.phoneDisplay, STUDIO.email],
+    lines: [...STUDIO.phones.map((p) => p.display), STUDIO.email],
   },
 ];
 

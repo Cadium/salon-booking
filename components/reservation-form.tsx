@@ -19,20 +19,31 @@ const pillSelectedStyle = {
   color: "var(--magenta)",
 } as const;
 
+/** Every way to reach the studio — shown when the form itself can't be used. */
+function DirectContacts() {
+  return (
+    <span>
+      <a href={`mailto:${STUDIO.email}`} className="text-magenta">
+        {STUDIO.email}
+      </a>
+      {STUDIO.phones.map((phone) => (
+        <span key={phone.digits}>
+          {" or "}
+          <a href={`tel:+${phone.digits}`} className="text-magenta">
+            {phone.display}
+          </a>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function UnavailableNotice() {
   return (
     <div className="border border-border/70 px-8 py-12 text-center">
       <p className="font-display text-2xl">Booking requests aren&apos;t wired up yet.</p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Reach out directly at{" "}
-        <a href={`mailto:${STUDIO.email}`} className="text-magenta">
-          {STUDIO.email}
-        </a>{" "}
-        or{" "}
-        <a href={`tel:+${STUDIO.phoneDigits}`} className="text-magenta">
-          {STUDIO.phoneDisplay}
-        </a>
-        .
+        Reach out directly at <DirectContacts />.
       </p>
     </div>
   );
@@ -44,15 +55,7 @@ function ErrorNotice({ onRetry }: { onRetry: () => void }) {
       <p className="font-display text-2xl text-destructive">Something went wrong.</p>
       <p className="mt-2 text-sm text-muted-foreground">
         Your request may not have gone through. Please try again, or reach
-        out directly at{" "}
-        <a href={`mailto:${STUDIO.email}`} className="text-magenta">
-          {STUDIO.email}
-        </a>{" "}
-        or{" "}
-        <a href={`tel:+${STUDIO.phoneDigits}`} className="text-magenta">
-          {STUDIO.phoneDisplay}
-        </a>
-        .
+        out directly at <DirectContacts />.
       </p>
       <button
         type="button"

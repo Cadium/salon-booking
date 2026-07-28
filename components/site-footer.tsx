@@ -4,7 +4,10 @@ import { STUDIO } from "@/lib/studio";
 // Social accounts intentionally absent — the studio has none yet. Add them
 // back here once real handles exist rather than linking to placeholders.
 const CONTACT_LINKS = [
-  { label: STUDIO.phoneDisplay, href: `tel:+${STUDIO.phoneDigits}` },
+  ...STUDIO.phones.map((phone) => ({
+    label: phone.display,
+    href: `tel:+${phone.digits}`,
+  })),
   { label: STUDIO.email, href: `mailto:${STUDIO.email}` },
 ];
 

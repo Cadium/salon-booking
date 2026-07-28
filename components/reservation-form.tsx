@@ -5,8 +5,8 @@ import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useBookingSelection } from "@/lib/booking-selection-context";
+import { STUDIO } from "@/lib/studio";
 
-const LOCATIONS = ["In-studio (Garland)", "In-home (DFW)"];
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_WEB_APP_URL;
 
 const labelClasses = "text-xs font-medium uppercase tracking-[0.2em] text-magenta";
@@ -25,12 +25,12 @@ function UnavailableNotice() {
       <p className="font-display text-2xl">Booking requests aren&apos;t wired up yet.</p>
       <p className="mt-2 text-sm text-muted-foreground">
         Reach out directly at{" "}
-        <a href="mailto:hello@hairbybelles.co" className="text-magenta">
-          hello@hairbybelles.co
+        <a href={`mailto:${STUDIO.email}`} className="text-magenta">
+          {STUDIO.email}
         </a>{" "}
         or{" "}
-        <a href="tel:+12145550142" className="text-magenta">
-          +1 (214) 555 0142
+        <a href={`tel:+${STUDIO.phoneDigits}`} className="text-magenta">
+          {STUDIO.phoneDisplay}
         </a>
         .
       </p>
@@ -45,12 +45,12 @@ function ErrorNotice() {
       <p className="mt-2 text-sm text-muted-foreground">
         Your request may not have gone through. Please try again, or reach
         out directly at{" "}
-        <a href="mailto:hello@hairbybelles.co" className="text-magenta">
-          hello@hairbybelles.co
+        <a href={`mailto:${STUDIO.email}`} className="text-magenta">
+          {STUDIO.email}
         </a>{" "}
         or{" "}
-        <a href="tel:+12145550142" className="text-magenta">
-          +1 (214) 555 0142
+        <a href={`tel:+${STUDIO.phoneDigits}`} className="text-magenta">
+          {STUDIO.phoneDisplay}
         </a>
         .
       </p>
@@ -63,9 +63,6 @@ export function ReservationForm() {
   const [errored, setErrored] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { selectedService, setSelectedService } = useBookingSelection();
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(
-    null,
-  );
   const iframeLoadCount = useRef(0);
 
   if (!GAS_URL) {
@@ -157,32 +154,6 @@ export function ReservationForm() {
                 className="sr-only"
               />
               {service.name}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-3">
-        <legend className={labelClasses}>Location</legend>
-        <div className="flex flex-wrap gap-3">
-          {LOCATIONS.map((location) => (
-            <label
-              key={location}
-              className={pillBaseClasses}
-              style={
-                selectedLocation === location ? pillSelectedStyle : undefined
-              }
-            >
-              <input
-                type="radio"
-                name="location"
-                value={location}
-                required
-                checked={selectedLocation === location}
-                onChange={() => setSelectedLocation(location)}
-                className="sr-only"
-              />
-              {location}
             </label>
           ))}
         </div>

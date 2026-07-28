@@ -1,7 +1,9 @@
+import { STUDIO } from "@/lib/studio";
+
 const LINKS = [
   {
     label: "Message on WhatsApp",
-    href: "https://wa.me/12145550142",
+    href: `https://wa.me/${STUDIO.phoneDigits}`,
     icon: (
       <path
         d="M4 12a8 8 0 1 1 3.2 6.4L4 19.5l1.1-3.3A7.96 7.96 0 0 1 4 12Z"
@@ -12,27 +14,8 @@ const LINKS = [
     ),
   },
   {
-    label: "Follow on Instagram",
-    href: "https://instagram.com/hairbybelles",
-    icon: (
-      <>
-        <rect
-          x="4"
-          y="4"
-          width="16"
-          height="16"
-          rx="5"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="16.2" cy="7.8" r="0.9" fill="currentColor" />
-      </>
-    ),
-  },
-  {
     label: "Call the studio",
-    href: "tel:+12145550142",
+    href: `tel:+${STUDIO.phoneDigits}`,
     icon: (
       <path
         d="M6.5 4.5c.8-.3 1.7 0 2 .8l1 2.3c.3.6.1 1.4-.4 1.9l-1 .9c.6 1.7 1.9 3 3.6 3.6l.9-1c.5-.5 1.3-.7 1.9-.4l2.3 1c.8.3 1.1 1.2.8 2l-.5 1.2c-.3.8-1.1 1.3-2 1.2-5.3-.7-9.5-4.9-10.2-10.2-.1-.9.4-1.7 1.2-2l1.2-.5Z"
@@ -40,6 +23,29 @@ const LINKS = [
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
+    ),
+  },
+  {
+    label: "Email the studio",
+    href: `mailto:${STUDIO.email}`,
+    icon: (
+      <>
+        <rect
+          x="3.5"
+          y="5.5"
+          width="17"
+          height="13"
+          rx="2"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path
+          d="m4 7 8 6 8-6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </>
     ),
   },
 ];

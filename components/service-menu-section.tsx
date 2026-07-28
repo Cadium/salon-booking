@@ -22,15 +22,9 @@ export function ServiceMenuSection() {
           {collections.map((collection) => (
             <div key={collection.id}>
               <Reveal>
-                <div className="flex items-center gap-6">
-                  <h3 className="font-display text-2xl whitespace-nowrap md:text-3xl">
-                    {collection.name}
-                  </h3>
-                  <span
-                    aria-hidden
-                    className="stripe-rule h-4 flex-1 opacity-20"
-                  />
-                </div>
+                <h3 className="font-display text-2xl md:text-3xl">
+                  {collection.name}
+                </h3>
                 <p className="mt-3 max-w-lg text-sm text-muted-foreground">
                   {collection.blurb}
                 </p>

@@ -38,7 +38,7 @@ function UnavailableNotice() {
   );
 }
 
-function ErrorNotice() {
+function ErrorNotice({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="border border-destructive/40 px-8 py-12 text-center">
       <p className="font-display text-2xl text-destructive">Something went wrong.</p>
@@ -54,6 +54,13 @@ function ErrorNotice() {
         </a>
         .
       </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-6 cursor-pointer border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
+      >
+        Try again
+      </button>
     </div>
   );
 }
@@ -83,6 +90,15 @@ export function ReservationForm() {
     return <UnavailableNotice />;
   }
 
+  // Deliberately not on a timer — a confirmation that disappears while someone
+  // is still reading it is worse than one they dismiss themselves.
+  const startAnother = () => {
+    hasSubmitted.current = false;
+    setSubmitted(false);
+    setErrored(false);
+    setSelectedService(null);
+  };
+
   if (submitted) {
     return (
       <div className="border border-border/70 px-8 py-12 text-center">
@@ -90,12 +106,19 @@ export function ReservationForm() {
         <p className="mt-2 text-sm text-muted-foreground">
           We reply within one business day.
         </p>
+        <button
+          type="button"
+          onClick={startAnother}
+          className="mt-6 cursor-pointer border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
+        >
+          Book another style
+        </button>
       </div>
     );
   }
 
   if (errored) {
-    return <ErrorNotice />;
+    return <ErrorNotice onRetry={startAnother} />;
   }
 
   return (

@@ -6,7 +6,7 @@ const STEPS = [
     number: "01",
     title: "Send a request",
     description:
-      "Fill out the form below with your service, location, and preferred date.",
+      "Fill out the form below with the style you want and your preferred date.",
   },
   {
     number: "02",

@@ -1,9 +1,11 @@
 import { BrandWordmark } from "@/components/brand-wordmark";
+import { STUDIO } from "@/lib/studio";
 
-const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com" },
-  { label: "TikTok", href: "https://tiktok.com" },
-  { label: "Gift cards", href: "#" },
+// Social accounts intentionally absent — the studio has none yet. Add them
+// back here once real handles exist rather than linking to placeholders.
+const CONTACT_LINKS = [
+  { label: STUDIO.phoneDisplay, href: `tel:+${STUDIO.phoneDigits}` },
+  { label: STUDIO.email, href: `mailto:${STUDIO.email}` },
 ];
 
 export function SiteFooter() {
@@ -17,8 +19,8 @@ export function SiteFooter() {
           <p>Black-owned · Garland, TX</p>
           <p>© {new Date().getFullYear()} HAIRBYBELLES. All rights reserved.</p>
         </div>
-        <div className="flex gap-6">
-          {SOCIAL_LINKS.map((link) => (
+        <div className="flex flex-col gap-2 md:items-end">
+          {CONTACT_LINKS.map((link) => (
             <a
               key={link.label}
               href={link.href}

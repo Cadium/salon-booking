@@ -4,14 +4,14 @@ import { useEffect, useRef } from "react";
 import { gsap } from "@/lib/gsap";
 
 const TAGS = [
-  "Knotless braids",
-  "Boho curls",
-  "Stitch feed-ins",
+  "Knotless box braids",
+  "Boho braids",
+  "Senegalese twists",
+  "French curls",
   "Fulani braids",
-  "Goddess locs",
-  "Kids' styles",
-  "Bridal braiding",
-  "In-home service",
+  "Island twists",
+  "Micro braids",
+  "Borabora braids",
 ];
 
 const prefersReducedMotion = () =>

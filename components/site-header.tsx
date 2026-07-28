@@ -7,8 +7,7 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 
 const NAV_LINKS = [
   { href: "#services", label: "Services" },
-  { href: "#braider", label: "Your Braider" },
-  { href: "#philosophy", label: "Philosophy" },
+  { href: "#studio", label: "The Studio" },
   { href: "#book", label: "Visit" },
 ];
 
@@ -39,7 +38,7 @@ export function SiteHeader() {
           >
             <BrandWordmark className="text-lg whitespace-nowrap" />
             <span className="text-xs tracking-wide whitespace-nowrap text-muted-foreground">
-              GARLAND · EST. 2018
+              GARLAND · EST. 2016
             </span>
           </Link>
 

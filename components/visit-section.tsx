@@ -1,21 +1,17 @@
+import { STUDIO, STUDIO_ADDRESS_LINES } from "@/lib/studio";
+
 const COLUMNS = [
   {
     heading: "STUDIO",
-    lines: [
-      "Home studio, Garland",
-      "Full address sent after booking",
-      "Tue – Sat · 8am – 8pm",
-    ],
+    lines: STUDIO_ADDRESS_LINES,
+  },
+  {
+    heading: "OPENING HOURS",
+    lines: [STUDIO.hoursDisplay, "Closed Sundays"],
   },
   {
     heading: "CONTACT",
-    lines: ["hello@hairbybelles.co", "+1 (214) 555 0142", "@hairbybelles"],
-  },
-  {
-    heading: "IN-HOME SERVICE",
-    lines: [
-      "Mobile appointments available across Garland, Rowlett, Mesquite, Sachse, Richardson, and surrounding DFW. A small travel fee applies past 20 miles from the studio.",
-    ],
+    lines: [STUDIO.phoneDisplay, STUDIO.email],
   },
 ];
 

@@ -122,7 +122,7 @@ export function HeroSection() {
             className="mb-6 flex items-center gap-3 text-xs tracking-[0.2em] text-rose-pop"
           >
             <span aria-hidden className="h-px w-8 bg-rose-pop" />
-            BLACK-OWNED · GARLAND, TX · EST. 2018
+            BLACK-OWNED · GARLAND, TX · EST. 2016
           </p>
 
           <h1 className="font-display text-5xl leading-[0.95] tracking-[-0.02em] text-bone md:text-7xl">
@@ -139,9 +139,9 @@ export function HeroSection() {
             ref={bodyRef}
             className="hero-description mt-6 max-w-md text-lg text-bone/75"
           >
-            HAIRBYBELLES is a home-based braiding studio in Garland — one
-            guest at a time, gentle tension, and clean parts. In-studio or
-            in-home appointments across the DFW metroplex.
+            HAIRBYBELLES is a braiding studio in Garland, Texas — over ten
+            years of clean parts, gentle tension, and more than one pair of
+            hands when your style calls for it.
           </p>
 
           <div ref={ctasRef} className="mt-8 flex flex-wrap items-center gap-6">
@@ -168,7 +168,7 @@ export function HeroSection() {
         className="absolute bottom-8 right-6 z-10 bg-bone px-6 py-4 md:right-10"
       >
         <p className="text-xs tracking-[0.2em] text-magenta">NOW BOOKING</p>
-        <p className="font-display text-lg">Studio &amp; mobile · DFW</p>
+        <p className="font-display text-lg">Mon – Sat · Garland, TX</p>
       </div>
     </section>
   );

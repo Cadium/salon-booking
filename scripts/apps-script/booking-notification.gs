@@ -34,7 +34,6 @@ var SHEET_HEADERS = [
   "Email",
   "Phone",
   "Service",
-  "Location",
   "Preferred date",
   "Notes",
 ];
@@ -93,7 +92,6 @@ function logToSheet(received, data) {
     data.email || "",
     data.phone || "",
     data.service || "",
-    data.location || "",
     data.date || "",
     data.notes || "",
   ]);
@@ -168,7 +166,6 @@ function buildHtmlBody(received, data) {
         : ""
     ) +
     detailRow("Service", esc(data.service)) +
-    detailRow("Location", esc(data.location)) +
     detailRow("Preferred date", esc(data.date));
 
   var notes = data.notes
@@ -281,7 +278,6 @@ function buildPlainBody(received, data) {
     "Email: " + (data.email || "—"),
     "Phone: " + (data.phone || "—"),
     "Service: " + (data.service || "—"),
-    "Location: " + (data.location || "—"),
     "Preferred date: " + (data.date || "—"),
   ];
 

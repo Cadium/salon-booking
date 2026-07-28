@@ -4,7 +4,7 @@ import "./globals.css";
 const SITE_URL = "https://salon-booking-six-xi.vercel.app";
 const TITLE = "HAIRBYBELLES — Black-Owned Braiding in Garland, TX";
 const DESCRIPTION =
-  "HAIRBYBELLES is a home-based braiding studio in Garland — one guest at a time, gentle tension, and clean parts. In-studio or in-home appointments across the DFW metroplex.";
+  "HAIRBYBELLES is a braiding studio in Garland, Texas — knotless braids, boho, twists and more, with over ten years of clean parts and gentle tension. Open Monday to Saturday.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

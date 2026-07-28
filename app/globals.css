@@ -138,10 +138,3 @@ body {
   The studio's own backdrop is a black-and-white vertical stripe, so the same
   rhythm carries into the page as a section marker.
 */
-.stripe-rule {
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--ink-plum) 0 2px,
-    transparent 2px 10px
-  );
-}

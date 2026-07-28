@@ -10,9 +10,17 @@ export const STUDIO = {
   establishedYear: 2016,
 
   email: "Adedijikikelomo@gmail.com",
-  /** Digits only, with country code — used to build tel: and wa.me links. */
-  phoneDigits: "18322076324",
-  phoneDisplay: "+1 (832) 207 6324",
+
+  /**
+   * Contact numbers, most-used first. `digits` carries the country code and is
+   * what builds tel: and wa.me links; `display` is what visitors read. Add or
+   * remove entries here and every surface follows — the listings show them all,
+   * and the WhatsApp and call buttons offer a choice whenever there is one.
+   */
+  phones: [
+    { digits: "18322076324", display: "+1 (832) 207 6324" },
+    { digits: "19452697357", display: "+1 (945) 269 7357" },
+  ],
 
   address: {
     street: "2542 Barnwood Lane",

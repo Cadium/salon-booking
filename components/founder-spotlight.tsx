@@ -17,10 +17,11 @@ export function FounderSpotlight() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-10 px-6 py-24 md:grid-cols-2 md:gap-16 md:px-10 md:py-32">
         <ParallaxImage className="relative order-2 aspect-[4/5] w-full md:order-1">
           <Image
-            src="/images/salon-interior.jpg"
-            alt="Warm home braiding studio in Garland with a styling chair, mirror, plants, and soft window light"
+            src="/images/styles/senegalese-twists.jpeg"
+            alt="Senegalese twists finished in the studio, beneath the HAIRBYBELLES sign"
             fill
-            className="object-cover"
+            style={{ objectPosition: "45% 40%" }}
+            className="style-photo object-cover"
             sizes="(min-width: 768px) 50vw, 100vw"
           />
         </ParallaxImage>

@@ -84,20 +84,22 @@ export function HeroSection() {
       <div ref={imageWrapRef} className="absolute inset-0">
         <div ref={photoARef} className="absolute inset-0">
           <Image
-            src="/images/hero-model.jpg"
-            alt="Black woman with long knotless braids in soft, warm light"
+            src="/images/styles/miracle-knot.jpeg"
+            alt="Braids with soft curl texture, finished in the studio"
             fill
             priority
-            className="object-cover"
+            style={{ objectPosition: "50% 40%" }}
+            className="style-photo object-cover"
             sizes="100vw"
           />
         </div>
         <div ref={photoBRef} className="absolute inset-0 opacity-0">
           <Image
-            src="/images/salon-interior.jpg"
-            alt="Warm, sunlit home braiding studio interior"
+            src="/images/styles/french-curls.jpeg"
+            alt="Auburn braids finishing in large loose curls"
             fill
-            className="object-cover"
+            style={{ objectPosition: "50% 40%" }}
+            className="style-photo object-cover"
             sizes="100vw"
           />
         </div>

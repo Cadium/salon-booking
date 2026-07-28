@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -63,7 +63,21 @@ export function ReservationForm() {
   const [errored, setErrored] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { selectedService, setSelectedService } = useBookingSelection();
-  const iframeLoadCount = useRef(0);
+
+  // The submission target is cross-origin, so the iframe's load event is the
+  // only signal available that the POST completed. Track whether a submit has
+  // actually happened rather than counting loads: browsers disagree on whether
+  // an iframe fires an initial load for about:blank, and counting left the
+  // form stuck on "Sending…" forever where that first event never came.
+  const hasSubmitted = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    },
+    [],
+  );
 
   if (!GAS_URL) {
     return <UnavailableNotice />;
@@ -89,7 +103,15 @@ export function ReservationForm() {
       action={GAS_URL}
       method="POST"
       target="hairbybelles-reservation-frame"
-      onSubmit={() => setIsSubmitting(true)}
+      onSubmit={() => {
+        hasSubmitted.current = true;
+        setIsSubmitting(true);
+        // Never let the form hang if the iframe never reports back.
+        timeoutRef.current = setTimeout(() => {
+          setIsSubmitting(false);
+          setErrored(true);
+        }, 15000);
+      }}
       className="flex flex-col gap-8"
     >
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -191,13 +213,14 @@ export function ReservationForm() {
         name="hairbybelles-reservation-frame"
         className="hidden"
         onLoad={() => {
-          iframeLoadCount.current += 1;
-          if (iframeLoadCount.current > 1) {
-            setIsSubmitting(false);
-            setSubmitted(true);
-          }
+          // Ignore the initial about:blank load where a browser does fire one.
+          if (!hasSubmitted.current) return;
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          setIsSubmitting(false);
+          setSubmitted(true);
         }}
         onError={() => {
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
           setIsSubmitting(false);
           setErrored(true);
         }}

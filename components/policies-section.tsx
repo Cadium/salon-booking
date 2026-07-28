@@ -5,7 +5,7 @@ const POLICIES = [
   {
     title: "Booking & deposits",
     description:
-      "A non-refundable deposit secures certain services; balance due day-of via cash, Zelle, Cash App, or card.",
+      "A $30 non-refundable deposit holds your slot — the same for every style — and comes off your total on the day. Send it by Zelle, Cash App, or Apple Pay.",
   },
   {
     title: "Cancellations",

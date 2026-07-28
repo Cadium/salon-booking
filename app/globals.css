@@ -123,3 +123,25 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/*
+  Shared grade for the studio photography. The set is shot on a phone across
+  many sittings, so white balance and exposure swing hard between images —
+  lifting contrast slightly and pulling saturation back to a common floor is
+  what lets them hang together as one collection instead of a camera roll.
+*/
+.style-photo {
+  filter: saturate(0.92) contrast(1.06) brightness(1.02);
+}
+
+/*
+  The studio's own backdrop is a black-and-white vertical stripe, so the same
+  rhythm carries into the page as a section marker.
+*/
+.stripe-rule {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--ink-plum) 0 2px,
+    transparent 2px 10px
+  );
+}

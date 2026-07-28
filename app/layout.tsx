@@ -19,10 +19,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/hero-model.jpg",
-        width: 1200,
-        height: 1600,
-        alt: "Black woman with long knotless braids in soft, warm light",
+        url: "/images/styles/french-curls.jpeg",
+        width: 923,
+        height: 1387,
+        alt: "Auburn braids finishing in large loose curls",
       },
     ],
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/images/hero-model.jpg"],
+    images: ["/images/styles/french-curls.jpeg"],
   },
 };
 

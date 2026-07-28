@@ -13,9 +13,9 @@ export const STUDIO = {
 
   /**
    * Contact numbers, most-used first. `digits` carries the country code and is
-   * what builds tel: and wa.me links; `display` is what visitors read.
-   * Anywhere only one number fits — the WhatsApp and call buttons — uses the
-   * first. Anywhere contact details are listed shows all of them.
+   * what builds tel: and wa.me links; `display` is what visitors read. Add or
+   * remove entries here and every surface follows — the listings show them all,
+   * and the WhatsApp and call buttons offer a choice whenever there is one.
    */
   phones: [
     { digits: "18322076324", display: "+1 (832) 207 6324" },
@@ -31,9 +31,6 @@ export const STUDIO = {
 
   hoursDisplay: "Mon – Sat · 7am – 7pm",
 } as const;
-
-/** The number used where only one will fit. */
-export const PRIMARY_PHONE = STUDIO.phones[0];
 
 export const STUDIO_ADDRESS_LINES = [
   STUDIO.address.street,

@@ -44,9 +44,23 @@ type DatePickerProps = {
   id?: string;
   name: string;
   label: string;
+  /**
+   * Hidden inputs are skipped by native form validation, so the form needs the
+   * value surfaced to it in order to require a choice.
+   */
+  onChange?: (value: string | null) => void;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
-export function DatePicker({ id, name, label }: DatePickerProps) {
+export function DatePicker({
+  id,
+  name,
+  label,
+  onChange,
+  invalid,
+  describedBy,
+}: DatePickerProps) {
   const reactId = useId();
   const fieldId = id ?? reactId;
   const [open, setOpen] = useState(false);
@@ -97,7 +111,13 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="flex w-full cursor-pointer items-center justify-between border-0 border-b border-border bg-transparent py-2 text-left text-base transition-colors focus-visible:border-magenta focus-visible:outline-none"
+        // No aria-invalid here: this button opens a dialog rather than a
+        // listbox, and the role does not support it. The live error message and
+        // the red underline carry the invalid state instead.
+        aria-describedby={describedBy}
+        className={`flex w-full cursor-pointer items-center justify-between border-0 border-b bg-transparent py-2 text-left text-base transition-colors focus-visible:border-magenta focus-visible:outline-none ${
+          invalid ? "border-destructive" : "border-border"
+        }`}
       >
         <span className={selected ? "text-foreground" : "text-muted-foreground/60"}>
           {selected ? formatDisplay(selected) : "Select a date"}
@@ -176,6 +196,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
                 onClick={() => {
                   setSelected(day);
                   setOpen(false);
+                  onChange?.(toInputValue(day));
                 }}
                 className={`mx-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors ${
                   isSelected

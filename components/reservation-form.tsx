@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { useBookingSelection } from "@/lib/booking-selection-context";
 import { STUDIO } from "@/lib/studio";
+import { DURATION_NOTE } from "@/lib/availability";
 
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_WEB_APP_URL;
 
@@ -68,10 +70,19 @@ function ErrorNotice({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/** Sundays are worked by arrangement only, so a Sunday pick gets flagged. */
+function isSunday(isoDate: string): boolean {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay() === 0;
+}
+
 export function ReservationForm() {
   const [submitted, setSubmitted] = useState(false);
   const [errored, setErrored] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [date, setDate] = useState<string | null>(null);
+  const [time, setTime] = useState<string | null>(null);
+  const [showMissing, setShowMissing] = useState(false);
   const { selectedService, setSelectedService } = useBookingSelection();
 
   // The submission target is cross-origin, so the iframe's load event is the
@@ -100,6 +111,9 @@ export function ReservationForm() {
     setSubmitted(false);
     setErrored(false);
     setSelectedService(null);
+    setDate(null);
+    setTime(null);
+    setShowMissing(false);
   };
 
   if (submitted) {
@@ -129,7 +143,15 @@ export function ReservationForm() {
       action={GAS_URL}
       method="POST"
       target="hairbybelles-reservation-frame"
-      onSubmit={() => {
+      onSubmit={(e) => {
+        // The pickers store their value in hidden inputs, which native
+        // validation ignores, so a missing date or time has to be caught here
+        // or the request arrives with no appointment on it at all.
+        if (!date || !time) {
+          e.preventDefault();
+          setShowMissing(true);
+          return;
+        }
         hasSubmitted.current = true;
         setIsSubmitting(true);
         // Never let the form hang if the iframe never reports back.
@@ -207,8 +229,44 @@ export function ReservationForm() {
         </div>
       </fieldset>
 
-      <div className="md:max-w-xs">
-        <DatePicker id="date" name="date" label="Preferred date" />
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:max-w-xl">
+          <DatePicker
+            id="date"
+            name="date"
+            label="Preferred date"
+            onChange={setDate}
+            invalid={showMissing && !date}
+            describedBy={showMissing && !date ? "appointment-error" : undefined}
+          />
+          <TimePicker
+            id="time"
+            name="time"
+            label="Start time"
+            onChange={setTime}
+            invalid={showMissing && !time}
+            describedBy={showMissing && !time ? "appointment-error" : undefined}
+          />
+        </div>
+
+        {showMissing && (!date || !time) && (
+          <p id="appointment-error" role="alert" className="text-sm text-destructive">
+            {!date && !time
+              ? "Please choose a date and a start time."
+              : !date
+                ? "Please choose a date."
+                : "Please choose a start time."}
+          </p>
+        )}
+
+        <p className="text-sm text-muted-foreground">{DURATION_NOTE}</p>
+
+        {date && isSunday(date) && (
+          <p className="text-sm text-muted-foreground">
+            Sundays are by appointment, so we&apos;ll confirm that one with you
+            directly.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">

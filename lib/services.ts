@@ -38,7 +38,7 @@ export const collections: Collection[] = [
     id: "boho-curls",
     name: "Boho & Curls",
     blurb:
-      "Braids finished with loose, curly texture — the fullest, softest looks on the menu.",
+      "Braids finished with loose, curly texture — the fullest, softest looks on the menu. Bring your own curly hair, or we can source it for you at an added cost.",
   },
   {
     id: "twists",

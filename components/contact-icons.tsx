@@ -61,8 +61,31 @@ type NumberMenu = "whatsapp" | "call";
  */
 export function ContactIcons({ className = "" }: { className?: string }) {
   const [openMenu, setOpenMenu] = useState<NumberMenu | null>(null);
+  const [copied, setCopied] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasChoice = STUDIO.phones.length > 1;
+
+  useEffect(
+    () => () => {
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+    },
+    [],
+  );
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(STUDIO.email);
+      setCopied(true);
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+      copyResetRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access needs a secure context and permission. Where it is
+      // refused, opening the mail app still gets the visitor where they were
+      // going, rather than the button appearing to do nothing.
+      window.location.href = `mailto:${STUDIO.email}`;
+    }
+  };
 
   useEffect(() => {
     if (!openMenu) return;
@@ -150,13 +173,30 @@ export function ContactIcons({ className = "" }: { className?: string }) {
     <div ref={rootRef} className={`flex items-center gap-3 ${className}`}>
       {renderPhoneAction("whatsapp", "Message on WhatsApp", WHATSAPP_ICON)}
       {renderPhoneAction("call", "Call the studio", PHONE_ICON)}
-      <a
-        href={`mailto:${STUDIO.email}`}
-        aria-label="Email the studio"
-        className={buttonClasses}
-      >
-        <Glyph>{EMAIL_ICON}</Glyph>
-      </a>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={copyEmail}
+          aria-label={`Copy email address, ${STUDIO.email}`}
+          className={`${buttonClasses} cursor-pointer`}
+        >
+          <Glyph>{EMAIL_ICON}</Glyph>
+        </button>
+
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 rounded-full bg-bone px-3 py-1 text-xs whitespace-nowrap text-ink-plum shadow-[0_8px_20px_-6px_rgba(30,18,32,0.4)] transition-all duration-150 ease-out ${
+            copied ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
+          }`}
+        >
+          Email copied
+        </span>
+      </div>
+
+      {/* Announced to screen readers, which get nothing from the visual pill. */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {copied ? `Email address copied: ${STUDIO.email}` : ""}
+      </span>
     </div>
   );
 }

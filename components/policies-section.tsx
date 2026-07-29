@@ -50,7 +50,7 @@ export function PoliciesSection() {
         >
           {POLICIES.map((policy) => (
             <div key={policy.title}>
-              <dt className="font-display text-lg">{policy.title}</dt>
+              <dt className="font-display font-semibold text-lg">{policy.title}</dt>
               <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {policy.description}
               </dd>

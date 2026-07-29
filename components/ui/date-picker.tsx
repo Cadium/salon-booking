@@ -140,7 +140,7 @@ export function DatePicker({ id, name, label }: DatePickerProps) {
           >
             ‹
           </button>
-          <p className="font-display text-lg">
+          <p className="font-display font-semibold text-lg">
             {MONTH_NAMES[month]} {year}
           </p>
           <button

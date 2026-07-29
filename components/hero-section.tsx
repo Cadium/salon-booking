@@ -168,7 +168,7 @@ export function HeroSection() {
         className="absolute bottom-8 right-6 z-10 bg-bone px-6 py-4 md:right-10"
       >
         <p className="text-xs tracking-[0.2em] text-magenta">NOW BOOKING</p>
-        <p className="font-display text-lg">Mon – Sat · Garland, TX</p>
+        <p className="font-display font-semibold text-lg">Mon – Sat · Garland, TX</p>
       </div>
     </section>
   );

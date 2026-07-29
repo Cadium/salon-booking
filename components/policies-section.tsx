@@ -18,6 +18,11 @@ const POLICIES = [
       "Clean, dry, detangled hair unless a wash is included, and on time — more than 15 minutes late may require rescheduling.",
   },
   {
+    title: "Hair color",
+    description:
+      "Natural braiding hair colors are included. Bringing colored hair adds $10.",
+  },
+  {
     title: "Little ones",
     description:
       "Kids are welcome if they can sit calmly for the full service.",

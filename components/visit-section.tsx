@@ -7,7 +7,7 @@ const COLUMNS = [
   },
   {
     heading: "OPENING HOURS",
-    lines: [STUDIO.hoursDisplay, "Closed Sundays"],
+    lines: [STUDIO.hoursDisplay, "Sundays by appointment"],
   },
   {
     heading: "CONTACT",

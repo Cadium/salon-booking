@@ -22,7 +22,7 @@ export function ServiceMenuSection() {
           {collections.map((collection) => (
             <div key={collection.id}>
               <Reveal>
-                <h3 className="font-display text-2xl md:text-3xl">
+                <h3 className="font-display font-semibold text-2xl md:text-3xl">
                   {collection.name}
                 </h3>
                 <p className="mt-3 max-w-lg text-sm text-muted-foreground">

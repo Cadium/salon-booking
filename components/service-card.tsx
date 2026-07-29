@@ -33,12 +33,12 @@ export function ServiceCard({ service }: { service: Service }) {
           <div className="pointer-events-none absolute inset-2 border border-gold/30" />
         </div>
 
-        <p className="absolute top-5 left-5 bg-bone px-2.5 py-1 font-display text-sm text-ink-plum">
+        <p className="absolute top-5 left-5 bg-bone px-2.5 py-1 font-display font-semibold text-sm text-ink-plum">
           from ${fromPrice(service)}
         </p>
       </div>
 
-      <h3 className="mt-5 font-display text-2xl">{service.name}</h3>
+      <h3 className="mt-5 font-display font-semibold text-2xl">{service.name}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         {service.description}
       </p>

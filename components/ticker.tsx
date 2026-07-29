@@ -47,7 +47,7 @@ export function Ticker() {
     >
       <div
         ref={trackRef}
-        className="marquee-track flex gap-16 whitespace-nowrap py-5 font-display text-2xl md:text-3xl"
+        className="marquee-track flex gap-16 whitespace-nowrap py-5 font-display font-semibold text-2xl md:text-3xl"
       >
         {doubled.map((tag, i) => (
           <span key={`${tag}-${i}`} className="flex items-center gap-16">

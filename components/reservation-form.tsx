@@ -41,7 +41,7 @@ function DirectContacts() {
 function UnavailableNotice() {
   return (
     <div className="border border-border/70 px-8 py-12 text-center">
-      <p className="font-display text-2xl">Booking requests aren&apos;t wired up yet.</p>
+      <p className="font-display font-semibold text-2xl">Booking requests aren&apos;t wired up yet.</p>
       <p className="mt-2 text-sm text-muted-foreground">
         Reach out directly at <DirectContacts />.
       </p>
@@ -52,7 +52,7 @@ function UnavailableNotice() {
 function ErrorNotice({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="border border-destructive/40 px-8 py-12 text-center">
-      <p className="font-display text-2xl text-destructive">Something went wrong.</p>
+      <p className="font-display font-semibold text-2xl text-destructive">Something went wrong.</p>
       <p className="mt-2 text-sm text-muted-foreground">
         Your request may not have gone through. Please try again, or reach
         out directly at <DirectContacts />.
@@ -105,7 +105,7 @@ export function ReservationForm() {
   if (submitted) {
     return (
       <div className="border border-border/70 px-8 py-12 text-center">
-        <p className="font-display text-2xl">Request received.</p>
+        <p className="font-display font-semibold text-2xl">Request received.</p>
         <p className="mt-2 text-sm text-muted-foreground">
           We reply within one business day.
         </p>

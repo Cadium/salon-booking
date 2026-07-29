@@ -53,7 +53,7 @@ export function HowItWorksSection() {
             <span className="inline-block bg-blush px-2.5 py-1 text-xs tracking-[0.2em] text-magenta">
               {step.number}
             </span>
-            <h3 className="mt-4 font-display text-xl">{step.title}</h3>
+            <h3 className="mt-4 font-display font-semibold text-xl">{step.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {step.description}
             </p>

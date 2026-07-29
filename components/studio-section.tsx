@@ -56,7 +56,7 @@ export function StudioSection() {
           >
             {CREDENTIALS.map((c) => (
               <div key={c.label}>
-                <dt className="font-display text-2xl">
+                <dt className="font-display font-semibold text-2xl">
                   <StatCounter value={c.value} />
                 </dt>
                 <dd className="mt-1 text-xs text-muted-foreground">

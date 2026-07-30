@@ -1,59 +1,18 @@
-/**
- * HAIRBYBELLES — automatic calendar booking and deposit workflow.
+/*
+ * HAIRBYBELLES booking workflow. Paste this file into Google Apps Script.
+ * The calendar check, accept/decline emails, calendar event and sheet log are
+ * automatic; manually marking a received deposit is the only owner action.
  *
- * This file is not run by the Next.js app. It is the source of truth for what
- * gets pasted into Google Apps Script.
- *
- * WHAT THIS DOES
- *  1. A request arrives from the site's reservation form with a date and
- *     start time. While a script lock is held, it checks the studio calendar
- *     for an overlapping appointment.
- *  2. A free slot is accepted immediately: it is logged, blocked on the
- *     calendar, and the client receives deposit instructions. A conflicting
- *     slot is logged as declined and the client receives a clear invitation
- *     to choose another time or date.
- *  3. The studio receives an informational email either way. For accepted
- *     bookings, that email includes the one remaining action: mark the
- *     deposit received after it appears in Zelle, Cash App, or Apple Pay.
- *
- * THE ONE MANUAL STEP, AND WHY IT CANNOT GO AWAY
- *  None of Zelle, Cash App or Apple Pay exposes an API, so no software can
- *  detect that a deposit arrived. Marking it received is therefore a human
- *  looking at a phone. Everything either side of that is automatic. Removing
- *  it would mean taking deposits by card instead.
- *
- * SETUP
- *  1. Create the script either way, from inside a Google Sheet
- *     (Extensions > Apps Script) or standalone at script.google.com. If it is
- *     standalone, the script creates its own log spreadsheet on the first
- *     request and puts it in the same account's Drive.
- *  2. Delete the placeholder code and paste this in.
- *  3. IMPORTANT: create this script while logged into the SAME Google account
- *     as OWNER_EMAIL below. Calendar blocking uses whichever account runs the
- *     script, so if that is a different account, bookings land on a calendar
- *     nobody is looking at.
- *  4. Save, then Deploy > New deployment.
- *  5. Click the gear beside "Select type" and choose Web app.
- *       Execute as:      Me
- *       Who has access:  Anyone
- *  6. Deploy, then authorise. Google shows an "unverified app" warning because
- *     the script is your own and unpublished — choose Advanced, then
- *     "Go to ... (unsafe)", then Allow. That is expected here.
- *  7. Copy the deployment URL ending in /exec and set it as
- *     NEXT_PUBLIC_GAS_WEB_APP_URL in Vercel (Settings > Environment
- *     Variables), then redeploy the site.
- *
- * IF YOU EVER EDIT THIS SCRIPT
- *  Deploy > Manage deployments > pencil icon > Version: New version > Deploy.
- *  Without that step the old code keeps serving and nothing appears to change.
+ * Deploy as a Web app: Execute as Me; Who has access Anyone. After edits:
+ * Save > Deploy > Manage deployments > pencil > New version > Deploy.
+ * The script must run under the same Google account that owns the calendar.
  */
 
 var OWNER_EMAIL = "Adedijikikelomo@gmail.com";
 var STUDIO_NAME = "HAIRBYBELLES";
+var CALENDAR_ID = "adedijikikelomo@gmail.com";
 
-// The studio is in Garland, Texas. Never derive this from the script's own
-// account locale, which is set elsewhere and put West Africa Time in front of
-// Texas clients.
+// Garland, Texas: Central Time, including daylight-saving changes.
 var STUDIO_TIMEZONE = "America/Chicago";
 
 var DEPOSIT_AMOUNT = 30;
@@ -61,15 +20,7 @@ var ZELLE_HANDLE = "(832) 207-6324";
 var CASHAPP_HANDLE = "$Thebellesempire";
 var APPLE_PAY_HANDLE = "@Hairbybelles_16";
 
-/**
- * Column order is load-bearing: rows are written as a positional array and
- * read back by looking the header name up in this list. "Start time" is
- * therefore appended at the end rather than slotted in next to "Preferred
- * date", where it reads more naturally. Inserting it mid-list would shift
- * Status and Token one column to the right for every row already in the sheet,
- * so every pending booking would suddenly read its token out of the wrong
- * cell. Appending leaves existing rows correct, with an empty time.
- */
+// Keep this order: existing sheet rows are read by these column positions.
 var SHEET_HEADERS = [
   "Received",
   "Name",
@@ -85,13 +36,11 @@ var SHEET_HEADERS = [
 
 var STATUS_ACCEPTED = "Accepted — awaiting deposit";
 var STATUS_PROCESSING = "Processing";
-// Kept only so bookings accepted by the previous deployment can still have
-// their deposits marked received from their existing email links.
+// Supports existing deposit links created before automatic booking.
 var STATUS_LEGACY_APPROVED = "Approved — awaiting deposit";
 var STATUS_CONFIRMED = "Confirmed";
 var STATUS_DECLINED = "Declined";
 
-// Brand palette, matching the site.
 var INK_PLUM = "#1E1220";
 var BONE = "#FBF3F0";
 var BLUSH = "#F7E4EA";
@@ -101,14 +50,7 @@ var GOLD = "#C9A24B";
 var RULE = "#EADFE2";
 var MUTED = "#8A7176";
 
-/* ================================================================== */
-/* Form submission                                                     */
-/* ================================================================== */
-
-/**
- * Booking requests arrive from the website form. The only action page command
- * is marking a deposit received; accepting or declining is never manual.
- */
+// Booking acceptance and decline happen in this request, never manually.
 function doPost(e) {
   var params = (e && e.parameter) || {};
 
@@ -147,9 +89,7 @@ function handleFormSubmission(data) {
     var booking;
 
     if (result.isAvailable) {
-      // Persist the in-flight state before writing to Calendar. If Calendar
-      // rejects the event, the sheet makes that exception visible instead of
-      // falsely claiming that a client was accepted.
+      // Log before Calendar so a Calendar failure is visible in the sheet.
       booking = logToSheet(received, data, token, STATUS_PROCESSING);
       createCalendarEvent(booking, result.start, result.end);
       setRowStatus(booking.rowIndex, STATUS_ACCEPTED);
@@ -169,23 +109,8 @@ function handleFormSubmission(data) {
   return ContentService.createTextOutput("OK");
 }
 
-/* ================================================================== */
-/* Recording a received deposit                                        */
-/* ================================================================== */
-
-/**
- * Every click from the studio's email lands here, and nothing on this path
- * ever changes a booking.
- *
- * That restraint is deliberate. Some mail clients, Outlook Safe Links and
- * several corporate scanners among them, fetch the links inside a message
- * before any human opens it. A GET that mutated state would let one of those
- * scanners mark a real deposit as received on their own. So a GET only ever
- * renders the booking details, and the deposit button submits a POST.
- *
- * Calendar acceptance and decline never pass through this page at all: they
- * happen automatically as part of the original booking submission.
- */
+// GET only shows a booking; the deposit change requires a POST to avoid
+// automatic email-link scanners confirming a booking by accident.
 function doGet(e) {
   var params = (e && e.parameter) || {};
   var token = params.token;
@@ -210,11 +135,6 @@ function doGet(e) {
   return managePage(readBooking(row));
 }
 
-/**
- * Everything about one booking, read in a single pass. Handlers took eight
- * positional arguments before this, which made adding the start time an
- * exercise in counting commas.
- */
 function readBooking(row) {
   return {
     rowIndex: row.rowIndex,
@@ -230,7 +150,6 @@ function readBooking(row) {
   };
 }
 
-/** Routes the one remaining manual action: confirming a received deposit. */
 function handleAction(action, booking) {
   if (action === "paid") return handleMarkPaid(booking);
   return htmlPage(
@@ -277,7 +196,6 @@ function handleMarkPaid(booking) {
   );
 }
 
-/** The review link that goes in the studio's emails. */
 function buildReviewUrl(token) {
   return webAppUrl() + "?token=" + encodeURIComponent(token);
 }
@@ -286,17 +204,12 @@ function webAppUrl() {
   return ScriptApp.getService().getUrl();
 }
 
-/* ================================================================== */
-/* Calendar                                                             */
-/* ================================================================== */
-
-/** The longest block reserved for a booking, mirrored from the site copy. */
+// The event reserves the longest possible appointment window.
 var SHORTEST_SERVICE_HOURS = 4;
 var LONGEST_SERVICE_HOURS = 6;
 var OPENING_HOUR = 7;
 var CLOSING_HOUR = 19;
 
-/** "09:30" to a readable "9:30 AM". Falls back to whatever it was given. */
 function formatTimeOnly(value) {
   if (!value) return "";
   var parts = String(value).split(":");
@@ -309,7 +222,6 @@ function formatTimeOnly(value) {
   return hour12 + ":" + minute + " " + period;
 }
 
-/** A date and a start time as one phrase, skipping whichever is missing. */
 function formatWhen(dateValue, timeValue) {
   var date = formatDateOnly(dateValue);
   var time = formatTimeOnly(timeValue);
@@ -317,7 +229,6 @@ function formatWhen(dateValue, timeValue) {
   return date || time || "";
 }
 
-/** Combines the date and "HH:MM" into an instant in the studio's timezone. */
 function toStartDate(dateValue, timeValue) {
   var dateParts = datePartsFor(dateValue);
   if (!dateParts) return null;
@@ -328,20 +239,13 @@ function toStartDate(dateValue, timeValue) {
     return null;
   }
 
-  // Date constructors use the Apps Script project's timezone, which may be
-  // different from the calendar's timezone. Interpret the submitted wall time
-  // in America/Chicago explicitly so a server timezone can never move a Texas
-  // appointment onto a different hour or day.
+  // Interpret the chosen wall time in Central Time, not the script timezone.
   var wallTime = Date.UTC(dateParts.year, dateParts.month - 1, dateParts.day, hour, minute);
   var offset = timezoneOffsetMinutes(new Date(wallTime));
   return new Date(wallTime - offset * 60 * 1000);
 }
 
-/**
- * Returns the time window and availability for a request. The caller holds the
- * script lock while this runs and while it creates the event, preventing two
- * simultaneous requests from both seeing the same slot as free.
- */
+// The caller holds the lock until the matching calendar event is created.
 function reserveCalendarSlot(data) {
   var start = toStartDate(data.date, data.time);
   if (!start || !isBookableStartTime(data.time)) {
@@ -349,8 +253,16 @@ function reserveCalendarSlot(data) {
   }
 
   var end = new Date(start.getTime() + LONGEST_SERVICE_HOURS * 60 * 60 * 1000);
-  var events = CalendarApp.getDefaultCalendar().getEvents(start, end);
+  var events = getBookingCalendar().getEvents(start, end);
   return { isAvailable: events.length === 0, start: start, end: end };
+}
+
+function getBookingCalendar() {
+  var calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+  if (!calendar) {
+    throw new Error("The HairByBelles calendar could not be found or accessed.");
+  }
+  return calendar;
 }
 
 function isBookableStartTime(timeValue) {
@@ -370,7 +282,7 @@ function createCalendarEvent(booking, start, end) {
   var title = "Booked: " + booking.name +
     (booking.service ? ", " + booking.service : "");
 
-  CalendarApp.getDefaultCalendar().createEvent(title, start, end, {
+  getBookingCalendar().createEvent(title, start, end, {
     description:
       booking.name + " booked " + (booking.service || "an appointment") +
       " through the website. Allow " + SHORTEST_SERVICE_HOURS + " to " +
@@ -415,12 +327,6 @@ function datePartsFor(value) {
   return { year: year, month: month, day: day };
 }
 
-/**
- * Accepts either the YYYY-MM-DD string the site's date picker sends, or a real
- * Date. Both occur: doPost sees the raw string straight off the form, but
- * Older rows may still contain a Date because they were written before the
- * date column was explicitly stored as text.
- */
 function parseDateOnly(value) {
   var parts = datePartsFor(value);
   if (!parts) return null;
@@ -435,14 +341,7 @@ var MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-/**
- * A preferred date is a calendar date, not an instant, so it must never be
- * converted between timezones. Running "31 July, midnight" through a zone
- * conversion can shift it onto the 30th, which is worse than the original bug.
- * Building the label straight off the date's own parts keeps 31 July as
- * 31 July for everyone. Contrast timestamp(), which formats a real instant and
- * therefore does want the studio's zone.
- */
+// A chosen date is a calendar date, so do not timezone-convert it.
 function formatDateOnly(value) {
   var date = parseDateOnly(value);
   if (!date) return "";
@@ -454,20 +353,7 @@ function formatDateOnly(value) {
   );
 }
 
-/* ================================================================== */
-/* Sheet                                                                */
-/* ================================================================== */
-
-/**
- * Finds the sheet to log into, whichever way the script was set up.
- *
- *  - Script created from inside a Sheet (Extensions > Apps Script): uses it.
- *  - Standalone script (script.google.com): creates its own log spreadsheet
- *    the first time and remembers it, so no manual linking is needed.
- *
- * getActiveSpreadsheet() returns null for standalone scripts, which is what
- * made the whole notification fail before this fallback existed.
- */
+// Standalone scripts create and remember their own booking log spreadsheet.
 function getLogSheet() {
   var bound = SpreadsheetApp.getActiveSpreadsheet();
   if (bound) return bound.getSheets()[0];
@@ -509,9 +395,7 @@ function logToSheet(received, data, token, status) {
     SHEET_HEADERS.indexOf("Preferred date") + 1
   );
 
-  // Keeping the submitted date as text prevents Sheets from interpreting it in
-  // the script's own timezone before a later email or calendar operation reads
-  // it back out.
+  // Store the date as text so Sheets cannot shift it by timezone.
   dateCell.setNumberFormat("@");
   sheet.getRange(rowIndex, 1, 1, SHEET_HEADERS.length).setValues([[
     received,
@@ -540,9 +424,6 @@ function logToSheet(received, data, token, status) {
   };
 }
 
-/** Scans the log for a row whose Token column matches. Existing rows from
- * before this version have no token and are simply never found — they stay
- * actionable only by hand, same as before. */
 function findRowByToken(token) {
   var sheet = getLogSheet();
   var lastRow = sheet.getLastRow();
@@ -569,10 +450,6 @@ function setRowStatus(rowIndex, status) {
   sheet.getRange(rowIndex, statusCol).setValue(status);
 }
 
-/* ================================================================== */
-/* Shared email/page shell                                             */
-/* ================================================================== */
-
 function esc(value) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
@@ -589,12 +466,7 @@ function link(href, text, color) {
   );
 }
 
-/**
- * target="_top" is required, not cosmetic. Apps Script renders these pages
- * inside a sandboxed iframe, so a link without it navigates the iframe to
- * script.google.com, which Google refuses to be framed in. The click then
- * fails with "refused to connect" even though the action itself ran.
- */
+// Open Apps Script links in the full tab, outside its sandboxed frame.
 function button(href, text, variant) {
   var isPrimary = variant !== "outline";
   var bg = isPrimary ? MAGENTA : "transparent";
@@ -609,7 +481,6 @@ function button(href, text, variant) {
   );
 }
 
-/** One label/value row. Rows with no value are dropped entirely. */
 function detailRow(label, valueHtml) {
   if (!valueHtml) return "";
   return (
@@ -625,11 +496,6 @@ function detailRow(label, valueHtml) {
   );
 }
 
-/**
- * Wraps any body HTML in the shared wordmark header / gold hairline / footer
- * chrome — used for every email and every action-link page, so the branding
- * only needs to be built once.
- */
 function wrapEmailShell(eyebrow, heading, subheading, bodyHtml, footerText) {
   return (
     '<!doctype html><html><body style="margin:0;padding:0;background:' + BLUSH + ';">' +
@@ -669,7 +535,6 @@ function wrapEmailShell(eyebrow, heading, subheading, bodyHtml, footerText) {
   );
 }
 
-/** A plain informational page — used for action results and edge cases. */
 function htmlPage(title, bodyHtml) {
   var styledBody =
     '<div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:' +
@@ -677,11 +542,7 @@ function htmlPage(title, bodyHtml) {
   return HtmlService.createHtmlOutput(wrapEmailShell("", title, "", styledBody));
 }
 
-/**
- * A submit button inside a POST form. The mutation lives behind POST so that
- * link-scanning mail clients cannot trigger it, which is what allowed the old
- * two-step confirmation page to be removed.
- */
+// POST prevents mail-link scanners from changing a booking.
 function actionForm(token, action, label, variant) {
   var isPrimary = variant !== "outline";
   var bg = isPrimary ? MAGENTA : "transparent";
@@ -700,7 +561,6 @@ function actionForm(token, action, label, variant) {
   );
 }
 
-/** The page the studio opens only to record a received deposit. */
 function managePage(booking) {
   var rows =
     detailRow("Appointment", esc(formatWhen(booking.date, booking.time))) +
@@ -741,7 +601,6 @@ function managePage(booking) {
   ).setTitle(STUDIO_NAME + " booking");
 }
 
-/** Shown after an action runs, with a way back to the booking. */
 function resultPage(title, messageHtml, booking) {
   var body =
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
@@ -755,9 +614,6 @@ function resultPage(title, messageHtml, booking) {
   ).setTitle(STUDIO_NAME + " booking");
 }
 
-/* ================================================================== */
-/* Owner notifications                                                   */
-/* ================================================================== */
 
 function notifyAcceptedBooking(booking) {
   if (booking.email) {

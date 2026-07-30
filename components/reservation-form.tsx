@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { services } from "@/lib/services";
 import { SubmitButton, ButtonArrow } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -79,29 +79,11 @@ export function ReservationForm() {
   const [showMissing, setShowMissing] = useState(false);
   const { selectedService, setSelectedService } = useBookingSelection();
 
-  // The submission target is cross-origin, so the iframe's load event is the
-  // only signal available that the POST completed. Track whether a submit has
-  // actually happened rather than counting loads: browsers disagree on whether
-  // an iframe fires an initial load for about:blank, and counting left the
-  // form stuck on "Sending…" forever where that first event never came.
-  const hasSubmitted = useRef(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    },
-    [],
-  );
-
   if (!GAS_URL) {
     return <UnavailableNotice />;
   }
 
-  // Deliberately not on a timer — a confirmation that disappears while someone
-  // is still reading it is worse than one they dismiss themselves.
   const startAnother = () => {
-    hasSubmitted.current = false;
     setSubmitted(false);
     setErrored(false);
     setSelectedService(null);
@@ -115,7 +97,7 @@ export function ReservationForm() {
       <div className="border border-border/70 px-8 py-12 text-center">
         <p className="font-display font-semibold text-2xl">Request sent.</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Check your inbox for your booking update.
+          Your booking update has been sent to your inbox.
         </p>
         <button
           type="button"
@@ -134,25 +116,27 @@ export function ReservationForm() {
 
   return (
     <form
-      action={GAS_URL}
-      method="POST"
-      target="hairbybelles-reservation-frame"
-      onSubmit={(e) => {
-        // The pickers store their value in hidden inputs, which native
-        // validation ignores, so a missing date or time has to be caught here
-        // or the request arrives with no appointment on it at all.
+      onSubmit={async (e) => {
+        e.preventDefault();
         if (!date || !time) {
-          e.preventDefault();
           setShowMissing(true);
           return;
         }
-        hasSubmitted.current = true;
+
+        const form = e.currentTarget;
+        setErrored(false);
         setIsSubmitting(true);
-        // Never let the form hang if the iframe never reports back.
-        timeoutRef.current = setTimeout(() => {
+        try {
+          const response = await fetch("/api/booking", {
+            method: "POST",
+            body: new FormData(form),
+          });
+          if (!response.ok) throw new Error("Booking request failed");
+          setSubmitted(true);
+        } catch {
           setIsSubmitting(false);
           setErrored(true);
-        }, 15000);
+        }
       }}
       className="flex flex-col gap-8"
     >
@@ -280,23 +264,6 @@ export function ReservationForm() {
           holds a booked slot and goes toward your total.
         </p>
       </div>
-
-      <iframe
-        name="hairbybelles-reservation-frame"
-        className="hidden"
-        onLoad={() => {
-          // Ignore the initial about:blank load where a browser does fire one.
-          if (!hasSubmitted.current) return;
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          setIsSubmitting(false);
-          setSubmitted(true);
-        }}
-        onError={() => {
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          setIsSubmitting(false);
-          setErrored(true);
-        }}
-      />
     </form>
   );
 }

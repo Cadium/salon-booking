@@ -51,7 +51,7 @@ var MUTED = "#8A7176";
 
 // Booking acceptance and decline happen in this request, never manually.
 function doPost(e) {
-  var params = (e && e.parameter) || {};
+  var params = requestParams(e);
 
   if (params.action) {
     if (!params.token) {
@@ -71,6 +71,39 @@ function doPost(e) {
   }
 
   return handleFormSubmission(params);
+}
+
+// Read both forms Apps Script provides for URL-encoded web-app requests.
+// Some requests arrive with an empty e.parameter even though the raw POST body
+// contains the booking details.
+function requestParams(e) {
+  var params = {};
+  var parameter = (e && e.parameter) || {};
+  var key;
+
+  for (key in parameter) {
+    if (Object.prototype.hasOwnProperty.call(parameter, key)) {
+      params[key] = parameter[key];
+    }
+  }
+
+  var rawBody = e && e.postData && e.postData.contents;
+  if (!rawBody) return params;
+
+  var pairs = rawBody.split("&");
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i].split("=");
+    if (!pair[0]) continue;
+    var name = decodeFormValue(pair.shift());
+    var value = decodeFormValue(pair.join("="));
+    params[name] = value;
+  }
+
+  return params;
+}
+
+function decodeFormValue(value) {
+  return decodeURIComponent(String(value || "").replace(/\+/g, " "));
 }
 
 function handleFormSubmission(data) {

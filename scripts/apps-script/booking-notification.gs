@@ -10,7 +10,6 @@
 
 var OWNER_EMAIL = "Adedijikikelomo@gmail.com";
 var STUDIO_NAME = "HAIRBYBELLES";
-var CALENDAR_ID = "adedijikikelomo@gmail.com";
 
 // Garland, Texas: Central Time, including daylight-saving changes.
 var STUDIO_TIMEZONE = "America/Chicago";
@@ -52,7 +51,7 @@ var MUTED = "#8A7176";
 
 // Booking acceptance and decline happen in this request, never manually.
 function doPost(e) {
-  var params = (e && e.parameter) || {};
+  var params = requestParams(e);
 
   if (params.action) {
     if (!params.token) {
@@ -72,6 +71,39 @@ function doPost(e) {
   }
 
   return handleFormSubmission(params);
+}
+
+// Read both forms Apps Script provides for URL-encoded web-app requests.
+// Some requests arrive with an empty e.parameter even though the raw POST body
+// contains the booking details.
+function requestParams(e) {
+  var params = {};
+  var parameter = (e && e.parameter) || {};
+  var key;
+
+  for (key in parameter) {
+    if (Object.prototype.hasOwnProperty.call(parameter, key)) {
+      params[key] = parameter[key];
+    }
+  }
+
+  var rawBody = e && e.postData && e.postData.contents;
+  if (!rawBody) return params;
+
+  var pairs = rawBody.split("&");
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i].split("=");
+    if (!pair[0]) continue;
+    var name = decodeFormValue(pair.shift());
+    var value = decodeFormValue(pair.join("="));
+    params[name] = value;
+  }
+
+  return params;
+}
+
+function decodeFormValue(value) {
+  return decodeURIComponent(String(value || "").replace(/\+/g, " "));
 }
 
 function handleFormSubmission(data) {
@@ -253,16 +285,8 @@ function reserveCalendarSlot(data) {
   }
 
   var end = new Date(start.getTime() + LONGEST_SERVICE_HOURS * 60 * 60 * 1000);
-  var events = getBookingCalendar().getEvents(start, end);
+  var events = CalendarApp.getDefaultCalendar().getEvents(start, end);
   return { isAvailable: events.length === 0, start: start, end: end };
-}
-
-function getBookingCalendar() {
-  var calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-  if (!calendar) {
-    throw new Error("The HairByBelles calendar could not be found or accessed.");
-  }
-  return calendar;
 }
 
 function isBookableStartTime(timeValue) {
@@ -282,7 +306,7 @@ function createCalendarEvent(booking, start, end) {
   var title = "Booked: " + booking.name +
     (booking.service ? ", " + booking.service : "");
 
-  getBookingCalendar().createEvent(title, start, end, {
+  CalendarApp.getDefaultCalendar().createEvent(title, start, end, {
     description:
       booking.name + " booked " + (booking.service || "an appointment") +
       " through the website. Allow " + SHORTEST_SERVICE_HOURS + " to " +

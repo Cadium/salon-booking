@@ -70,12 +70,6 @@ function ErrorNotice({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-/** Sundays are worked by arrangement only, so a Sunday pick gets flagged. */
-function isSunday(isoDate: string): boolean {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  return new Date(y, m - 1, d).getDay() === 0;
-}
-
 export function ReservationForm() {
   const [submitted, setSubmitted] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -119,9 +113,9 @@ export function ReservationForm() {
   if (submitted) {
     return (
       <div className="border border-border/70 px-8 py-12 text-center">
-        <p className="font-display font-semibold text-2xl">Request received.</p>
+        <p className="font-display font-semibold text-2xl">Request sent.</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          We reply within one business day.
+          Check your inbox for your booking update.
         </p>
         <button
           type="button"
@@ -261,12 +255,6 @@ export function ReservationForm() {
 
         <p className="text-sm text-muted-foreground">{DURATION_NOTE}</p>
 
-        {date && isSunday(date) && (
-          <p className="text-sm text-muted-foreground">
-            Sundays are by appointment, so we&apos;ll confirm that one with you
-            directly.
-          </p>
-        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -288,8 +276,8 @@ export function ReservationForm() {
           {!isSubmitting && <ButtonArrow>↗</ButtonArrow>}
         </SubmitButton>
         <p className="text-sm text-muted-foreground">
-          We reply within one business day. A $30 non-refundable deposit
-          holds your slot and goes toward your total.
+          We check your requested time right away. A $30 non-refundable deposit
+          holds a booked slot and goes toward your total.
         </p>
       </div>
 

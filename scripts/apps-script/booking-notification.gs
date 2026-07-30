@@ -50,6 +50,11 @@
 var OWNER_EMAIL = "Adedijikikelomo@gmail.com";
 var STUDIO_NAME = "HAIRBYBELLES";
 
+// The studio is in Garland, Texas. Never derive this from the script's own
+// account locale, which is set elsewhere and put West Africa Time in front of
+// Texas clients.
+var STUDIO_TIMEZONE = "America/Chicago";
+
 var DEPOSIT_AMOUNT = 30;
 var ZELLE_HANDLE = "(832) 207-6324";
 var CASHAPP_HANDLE = "$Thebellesempire";
@@ -122,7 +127,7 @@ function doPost(e) {
       to: data.email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
-      subject: "We got your request — " + STUDIO_NAME,
+      subject: "We have your booking request",
       body: buildAckPlainBody(data),
       htmlBody: buildAckHtmlBody(data),
     });
@@ -205,7 +210,7 @@ function handleApprove(row, token, name, service, date, email, currentStatus, co
   if (!confirmed) {
     return confirmationPage(
       "Approve this booking?",
-      esc(name) + (service ? " — " + esc(service) : "") + (date ? " — " + esc(formatDateOnly(date)) : ""),
+      esc(name) + (service ? ", " + esc(service) : "") + (date ? ", " + esc(formatDateOnly(date)) : ""),
       "This blocks " + esc(date ? formatDateOnly(date) : "the requested date") +
         " on your calendar and emails " + esc(name) + " the $" + DEPOSIT_AMOUNT + " deposit instructions.",
       buildActionUrl("approve", token)
@@ -231,7 +236,7 @@ function handleApprove(row, token, name, service, date, email, currentStatus, co
       to: email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
-      subject: "You're approved — send your deposit — " + STUDIO_NAME,
+      subject: "Your appointment is approved, just the deposit left",
       body: buildDepositPlainBody(name, date, service),
       htmlBody: buildDepositHtmlBody(name, date, service),
     });
@@ -289,7 +294,7 @@ function handleMarkPaid(row, token, name, date, email, currentStatus, confirmed)
       to: email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
-      subject: "You're all set — " + STUDIO_NAME,
+      subject: "Your appointment is confirmed",
       body: buildConfirmedPlainBody(name, date),
       htmlBody: buildConfirmedHtmlBody(name, date),
     });
@@ -319,7 +324,7 @@ function handleDecline(row, token, name, email, currentStatus, confirmed) {
       to: email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
-      subject: "About your request — " + STUDIO_NAME,
+      subject: "About your booking request",
       body: buildDeclinedPlainBody(name),
       htmlBody: buildDeclinedHtmlBody(name),
     });
@@ -351,10 +356,24 @@ function describeCalendarConflict(dateStr) {
     (count === 1 ? "thing" : "things") + " on your calendar this date.";
 }
 
-/** Expects YYYY-MM-DD, which is what the site's date picker sends. */
-function parseDateOnly(dateStr) {
-  if (!dateStr) return null;
-  var parts = String(dateStr).split("-");
+/**
+ * Accepts either the YYYY-MM-DD string the site's date picker sends, or a real
+ * Date. Both occur: doPost sees the raw string straight off the form, but
+ * Sheets silently converts that string into a date value on write, so anything
+ * read back out of the log arrives here as a Date instead. Handling only the
+ * string is what leaked a raw "Fri Jul 31 2026 00:00:00 GMT+0100" into the
+ * approval emails.
+ */
+function parseDateOnly(value) {
+  if (!value) return null;
+
+  if (Object.prototype.toString.call(value) === "[object Date]") {
+    return isNaN(value.getTime())
+      ? null
+      : new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  var parts = String(value).split("-");
   if (parts.length !== 3) return null;
   var y = parseInt(parts[0], 10);
   var m = parseInt(parts[1], 10);
@@ -363,10 +382,31 @@ function parseDateOnly(dateStr) {
   return new Date(y, m - 1, d);
 }
 
-function formatDateOnly(dateStr) {
-  var date = parseDateOnly(dateStr);
-  if (!date) return dateStr || "";
-  return Utilities.formatDate(date, Session.getScriptTimeZone(), "EEEE, MMMM d");
+var WEEKDAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+var MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/**
+ * A preferred date is a calendar date, not an instant, so it must never be
+ * converted between timezones. Running "31 July, midnight" through a zone
+ * conversion can shift it onto the 30th, which is worse than the original bug.
+ * Building the label straight off the date's own parts keeps 31 July as
+ * 31 July for everyone. Contrast timestamp(), which formats a real instant and
+ * therefore does want the studio's zone.
+ */
+function formatDateOnly(value) {
+  var date = parseDateOnly(value);
+  if (!date) return "";
+  return (
+    WEEKDAY_NAMES[date.getDay()] + ", " +
+    MONTH_NAMES[date.getMonth()] + " " +
+    date.getDate() + ", " +
+    date.getFullYear()
+  );
 }
 
 /* ================================================================== */
@@ -481,13 +521,19 @@ function link(href, text, color) {
   );
 }
 
+/**
+ * target="_top" is required, not cosmetic. Apps Script renders these pages
+ * inside a sandboxed iframe, so a link without it navigates the iframe to
+ * script.google.com, which Google refuses to be framed in. The click then
+ * fails with "refused to connect" even though the action itself ran.
+ */
 function button(href, text, variant) {
   var isPrimary = variant !== "outline";
   var bg = isPrimary ? MAGENTA : "transparent";
   var fg = isPrimary ? BONE : INK_PLUM;
   var border = isPrimary ? MAGENTA : INK_PLUM;
   return (
-    '<a href="' + esc(href) + '" style="display:inline-block;background:' + bg +
+    '<a href="' + esc(href) + '" target="_top" style="display:inline-block;background:' + bg +
     ";color:" + fg + ";border:1px solid " + border +
     ';padding:12px 22px;border-radius:2px;text-decoration:none;' +
     'font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;">' +
@@ -512,7 +558,7 @@ function detailRow(label, valueHtml) {
 }
 
 function timestamp(received) {
-  return Utilities.formatDate(received, Session.getScriptTimeZone(), "EEEE d MMMM, h:mm a");
+  return Utilities.formatDate(received, STUDIO_TIMEZONE, "EEEE, MMMM d 'at' h:mm a");
 }
 
 /**
@@ -662,23 +708,27 @@ function buildOwnerPlainBody(received, data, calendarNote, token) {
 /* ================================================================== */
 
 function buildAckHtmlBody(data) {
+  var what =
+    (data.service ? "<strong>" + esc(data.service) + "</strong>" : "your appointment") +
+    (data.date ? " on <strong>" + esc(formatDateOnly(data.date)) + "</strong>" : "");
+
   var body =
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">Thanks for reaching out! We&rsquo;ve got your request' +
-    (data.service ? " for <strong>" + esc(data.service) + "</strong>" : "") +
-    (data.date ? " on <strong>" + esc(formatDateOnly(data.date)) + "</strong>" : "") +
-    " and will confirm within one business day.</p>";
-  return wrapEmailShell("Request received", "Thanks, " + (data.name || "there") + "!", "", body);
+    INK_PLUM + ';">Thank you for reaching out. We have your request for ' + what +
+    ", and we will get back to you within one business day to confirm it.</p>";
+
+  return wrapEmailShell("Request received", "Thank you, " + (data.name || "there"), "", body);
 }
 
 function buildAckPlainBody(data) {
-  return [
-    "Thanks for reaching out!",
-    "We've got your request" +
-      (data.service ? " for " + data.service : "") +
-      (data.date ? " on " + formatDateOnly(data.date) : "") +
-      " and will confirm within one business day.",
-  ].join("\n\n");
+  var what =
+    (data.service || "your appointment") +
+    (data.date ? " on " + formatDateOnly(data.date) : "");
+
+  return (
+    "Thank you for reaching out. We have your request for " + what +
+    ", and we will get back to you within one business day to confirm it."
+  );
 }
 
 function buildDepositHtmlBody(name, date, service) {
@@ -692,67 +742,79 @@ function buildDepositHtmlBody(name, date, service) {
 
   var body =
     '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">You&rsquo;re confirmed for <strong>' +
-    esc(date ? formatDateOnly(date) : "your date") + "</strong>" +
-    (service ? " — <strong>" + esc(service) + "</strong>" : "") + ".</p>" +
+    INK_PLUM + ';">Good news, your appointment for <strong>' +
+    esc(service || "your style") + "</strong> on <strong>" +
+    esc(date ? formatDateOnly(date) : "your chosen date") + "</strong> has been approved.</p>" +
     '<p style="margin:0 0 12px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">A $' + DEPOSIT_AMOUNT +
-    " deposit holds your spot and comes off your total on the day. Send it any of these ways:</p>" +
+    INK_PLUM + ';">All that is left is the $' + DEPOSIT_AMOUNT +
+    " deposit, which holds your spot and comes off your total on the day. You can send it whichever way is easiest for you:</p>" +
     payments +
-    '<p style="margin:24px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:' + MUTED +
-    ';">Once you&rsquo;ve sent it, just reply to this email so we know to expect you.</p>';
+    '<p style="margin:24px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' + MUTED +
+    ';">Once you have sent it, reply to this email so we know to expect you.</p>';
 
-  return wrapEmailShell("You're approved", "Just the deposit left, " + name + "!", "", body);
+  return wrapEmailShell("Approved", "You are booked in, " + name, "", body);
 }
 
 function buildDepositPlainBody(name, date, service) {
   return [
-    "You're confirmed for " + (date ? formatDateOnly(date) : "your date") + (service ? " — " + service : "") + ".",
+    "Good news, your appointment for " + (service || "your style") +
+      " on " + (date ? formatDateOnly(date) : "your chosen date") + " has been approved.",
     "",
-    "A $" + DEPOSIT_AMOUNT + " deposit holds your spot and comes off your total on the day. Send it any of these ways:",
+    "All that is left is the $" + DEPOSIT_AMOUNT +
+      " deposit, which holds your spot and comes off your total on the day.",
+    "You can send it whichever way is easiest for you:",
+    "",
     "Zelle: " + ZELLE_HANDLE,
     "Cash App: " + CASHAPP_HANDLE,
     "Apple Pay: " + APPLE_PAY_HANDLE,
     "",
-    "Once you've sent it, just reply to this email so we know to expect you.",
+    "Once you have sent it, reply to this email so we know to expect you.",
   ].join("\n");
 }
 
 function buildConfirmedHtmlBody(name, date) {
   var body =
     '<p style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">You&rsquo;re all set for <strong>' +
-    esc(date ? formatDateOnly(date) : "your appointment") + "</strong>. See you then!</p>" +
+    INK_PLUM + ';">We have received your deposit, so your appointment on <strong>' +
+    esc(date ? formatDateOnly(date) : "your chosen date") +
+    "</strong> is fully confirmed. We are looking forward to seeing you.</p>" +
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">Quick reminder: clean, dry, detangled hair unless a wash is included, and please arrive on time.</p>';
+    MUTED + ';">Before you come, please arrive with clean, dry and detangled hair unless a wash is ' +
+    "included in your service, and do try to arrive on time so we can give you the full appointment.</p>";
 
-  return wrapEmailShell("You're all set", "See you soon, " + name + "!", "", body);
+  return wrapEmailShell("Confirmed", "You are all set, " + name, "", body);
 }
 
 function buildConfirmedPlainBody(name, date) {
   return [
-    "You're all set for " + (date ? formatDateOnly(date) : "your appointment") + ". See you then!",
+    "We have received your deposit, so your appointment on " +
+      (date ? formatDateOnly(date) : "your chosen date") +
+      " is fully confirmed. We are looking forward to seeing you.",
     "",
-    "Quick reminder: clean, dry, detangled hair unless a wash is included, and please arrive on time.",
+    "Before you come, please arrive with clean, dry and detangled hair unless a wash is included " +
+      "in your service, and do try to arrive on time so we can give you the full appointment.",
   ].join("\n");
 }
 
 function buildDeclinedHtmlBody(name) {
   var body =
     '<p style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">Thanks for thinking of ' + esc(STUDIO_NAME) +
-    " — unfortunately that date doesn&rsquo;t work.</p>" +
+    INK_PLUM + ';">Thank you for thinking of us. Unfortunately we are not able to take that date, ' +
+    "so we cannot confirm this appointment.</p>" +
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">Feel free to reply with another date, and we&rsquo;ll take a look.</p>';
+    MUTED + ';">If you are still interested, reply with another date that suits you and we will ' +
+    "check what we have available.</p>";
 
-  return wrapEmailShell("About your request", "Sorry, " + name + "!", "", body);
+  return wrapEmailShell("About your request", "Sorry about this, " + name, "", body);
 }
 
 function buildDeclinedPlainBody(name) {
   return [
-    "Thanks for thinking of " + STUDIO_NAME + " — unfortunately that date doesn't work.",
+    "Thank you for thinking of us. Unfortunately we are not able to take that date, " +
+      "so we cannot confirm this appointment.",
     "",
-    "Feel free to reply with another date, and we'll take a look.",
+    "If you are still interested, reply with another date that suits you and we will " +
+      "check what we have available.",
   ].join("\n");
 }
 

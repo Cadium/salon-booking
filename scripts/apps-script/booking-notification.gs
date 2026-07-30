@@ -5,32 +5,34 @@
  * gets pasted into Google Apps Script.
  *
  * WHAT THIS DOES
- *  1. A request comes in from the site's reservation form (doPost). It's
- *     logged to a Sheet, the studio is notified (with a note on whether that
- *     date already has something on the calendar), and the client gets an
- *     automatic "we got your request" email — something that didn't exist
- *     before this version.
- *  2. The studio's notification has an Approve / Decline link built in. Both
- *     open a small confirmation page first and only act on a second click —
- *     see the comment on doGet for why that extra step is load-bearing, not
- *     decoration.
- *  3. Approving creates a calendar block automatically and emails the client
- *     the deposit instructions. The studio also gets a short follow-up email
- *     with a "mark as paid" link, ready for whenever the deposit actually
- *     shows up in Zelle/Cash App/Apple Pay — nothing about that arrival can
- *     be checked automatically, so that click is the one genuinely manual
- *     step in the whole flow.
+ *  1. A request arrives from the site's reservation form, carrying a date and
+ *     a start time. It is logged to a Sheet, the client gets an immediate
+ *     acknowledgement, and the studio gets a notification listing everything
+ *     else already on the calendar that day.
+ *  2. That notification carries one link, which opens the booking for review:
+ *     full details, then Approve or Decline. See the comment on doGet for why
+ *     the buttons there submit a POST rather than being links in the email.
+ *  3. Approving puts a real timed block on the calendar and emails the client
+ *     the deposit details. The studio then gets a short follow-up with the
+ *     same review link, so the deposit can be marked received whenever it
+ *     turns up in Zelle, Cash App or Apple Pay.
+ *
+ * THE ONE MANUAL STEP, AND WHY IT CANNOT GO AWAY
+ *  None of Zelle, Cash App or Apple Pay exposes an API, so no software can
+ *  detect that a deposit arrived. Marking it received is therefore a human
+ *  looking at a phone. Everything either side of that is automatic. Removing
+ *  it would mean taking deposits by card instead.
  *
  * SETUP
- *  1. Create the script either way — from inside a Google Sheet
+ *  1. Create the script either way, from inside a Google Sheet
  *     (Extensions > Apps Script) or standalone at script.google.com. If it is
  *     standalone, the script creates its own log spreadsheet on the first
  *     request and puts it in the same account's Drive.
  *  2. Delete the placeholder code and paste this in.
  *  3. IMPORTANT: create this script while logged into the SAME Google account
- *     as OWNER_EMAIL below. Calendar blocking uses whichever account is
- *     running the script — if that's a different account, bookings get
- *     blocked on a calendar nobody is looking at.
+ *     as OWNER_EMAIL below. Calendar blocking uses whichever account runs the
+ *     script, so if that is a different account, bookings land on a calendar
+ *     nobody is looking at.
  *  4. Save, then Deploy > New deployment.
  *  5. Click the gear beside "Select type" and choose Web app.
  *       Execute as:      Me
@@ -60,6 +62,15 @@ var ZELLE_HANDLE = "(832) 207-6324";
 var CASHAPP_HANDLE = "$Thebellesempire";
 var APPLE_PAY_HANDLE = "@Hairbybelles_16";
 
+/**
+ * Column order is load-bearing: rows are written as a positional array and
+ * read back by looking the header name up in this list. "Start time" is
+ * therefore appended at the end rather than slotted in next to "Preferred
+ * date", where it reads more naturally. Inserting it mid-list would shift
+ * Status and Token one column to the right for every row already in the sheet,
+ * so every pending booking would suddenly read its token out of the wrong
+ * cell. Appending leaves existing rows correct, with an empty time.
+ */
 var SHEET_HEADERS = [
   "Received",
   "Name",
@@ -70,6 +81,7 @@ var SHEET_HEADERS = [
   "Notes",
   "Status",
   "Token",
+  "Start time",
 ];
 
 var STATUS_PENDING = "Pending";
@@ -91,8 +103,36 @@ var MUTED = "#8A7176";
 /* Form submission                                                     */
 /* ================================================================== */
 
+/**
+ * Two very different things arrive here: a booking request from the website
+ * form, and an approve/decline/mark-paid button pressed on the review page.
+ * They are told apart by the presence of an action, since only the review page
+ * sends one.
+ */
 function doPost(e) {
-  var data = (e && e.parameter) || {};
+  var params = (e && e.parameter) || {};
+
+  if (params.action) {
+    if (!params.token) {
+      return htmlPage(
+        "Nothing to act on",
+        "<p>That request was missing its booking reference.</p>"
+      );
+    }
+    var actionRow = findRowByToken(params.token);
+    if (!actionRow) {
+      return htmlPage(
+        "Link not recognised",
+        "<p>This link does not match a booking we have on file.</p>"
+      );
+    }
+    return handleAction(params.action, readBooking(actionRow));
+  }
+
+  return handleFormSubmission(params);
+}
+
+function handleFormSubmission(data) {
   var received = new Date();
   var token = Utilities.getUuid();
 
@@ -119,9 +159,8 @@ function doPost(e) {
     htmlBody: buildOwnerHtmlBody(received, data, calendarNote, token),
   });
 
-  // The client used to get nothing at all. Now they get an immediate,
-  // automatic acknowledgment — not a confirmed booking yet, just proof the
-  // request landed.
+  // The client used to get nothing at all. This is not a confirmed booking
+  // yet, only proof the request arrived.
   if (data.email) {
     MailApp.sendEmail({
       to: data.email,
@@ -139,221 +178,314 @@ function doPost(e) {
 function buildSubject(data) {
   var who = data.name || "Someone";
   return data.service
-    ? "New booking request — " + who + " · " + data.service
-    : "New booking request — " + who;
+    ? "New booking request: " + who + ", " + data.service
+    : "New booking request: " + who;
 }
 
 /* ================================================================== */
-/* Action links — approve / mark paid / decline                        */
+/* Reviewing and actioning a booking                                   */
 /* ================================================================== */
 
 /**
- * Handles every click coming from the action links in the studio's emails.
+ * Every click from the studio's email lands here, and nothing on this path
+ * ever changes a booking.
  *
- * Anti-prefetch guard, and why it matters: some email clients (Outlook Safe
- * Links, several corporate scanners) automatically visit links inside an
- * email to scan them for safety — before a human ever clicks anything. If
- * these links mutated a booking on a bare GET, a security scanner opening
- * the studio's email could silently approve or decline a real booking with
- * nobody touching anything. So nothing here ever changes state on the first
- * load — it renders a small confirmation page, and only a second explicit
- * click (a real link with &confirm=1) performs the actual action. A
- * prefetcher loads the page; it does not click the button on it.
+ * That restraint is deliberate. Some mail clients, Outlook Safe Links and
+ * several corporate scanners among them, fetch the links inside a message
+ * before any human opens it. A GET that mutated state would let one of those
+ * scanners approve or decline a real booking on its own. So a GET only ever
+ * renders the booking for review, and the buttons on that page submit a POST,
+ * which scanners do not do.
+ *
+ * The upside is that the old two-step "are you sure" page is gone. That step
+ * only existed to protect a mutating GET, so moving the mutation to POST
+ * removes the reason for it: one click in the inbox, one click to act.
  */
 function doGet(e) {
   var params = (e && e.parameter) || {};
-  var action = params.action;
   var token = params.token;
-  var confirmed = params.confirm === "1";
 
-  if (!action || !token) {
-    return htmlPage("Nothing to do here", "<p>This link is missing information.</p>");
+  if (!token) {
+    return htmlPage(
+      "Nothing to review",
+      "<p>This link is missing its booking reference.</p>"
+    );
   }
 
   var row = findRowByToken(token);
   if (!row) {
     return htmlPage(
-      "Link not recognized",
-      "<p>This link doesn&rsquo;t match a known request. It may have already been used, or the row was edited in the sheet.</p>"
+      "Link not recognised",
+      "<p>This link does not match a booking we have on file. It may have been " +
+        "removed from the sheet, or the link may have been cut short by your " +
+        "email program.</p>"
     );
   }
 
-  var name = rowValue(row, "Name") || "this client";
-  var service = rowValue(row, "Service") || "";
-  var date = rowValue(row, "Preferred date") || "";
-  var email = rowValue(row, "Email") || "";
-  var currentStatus = rowValue(row, "Status") || STATUS_PENDING;
-  var token2 = rowValue(row, "Token");
-
-  if (action === "approve") {
-    return handleApprove(row, token2, name, service, date, email, currentStatus, confirmed);
-  }
-  if (action === "paid") {
-    return handleMarkPaid(row, token2, name, date, email, currentStatus, confirmed);
-  }
-  if (action === "decline") {
-    return handleDecline(row, token2, name, email, currentStatus, confirmed);
-  }
-
-  return htmlPage("Unknown action", "<p>That isn&rsquo;t something this link knows how to do.</p>");
+  return managePage(readBooking(row));
 }
 
-function handleApprove(row, token, name, service, date, email, currentStatus, confirmed) {
-  if (currentStatus !== STATUS_PENDING) {
-    return htmlPage(
-      "Already handled",
-      "<p>" + esc(name) + "&rsquo;s request is already marked <strong>" +
-        esc(currentStatus) + "</strong>. Nothing changed.</p>"
-    );
+/**
+ * Everything about one booking, read in a single pass. Handlers took eight
+ * positional arguments before this, which made adding the start time an
+ * exercise in counting commas.
+ */
+function readBooking(row) {
+  return {
+    rowIndex: row.rowIndex,
+    name: rowValue(row, "Name") || "this client",
+    service: rowValue(row, "Service") || "",
+    date: rowValue(row, "Preferred date") || "",
+    time: rowValue(row, "Start time") || "",
+    email: rowValue(row, "Email") || "",
+    phone: rowValue(row, "Phone") || "",
+    notes: rowValue(row, "Notes") || "",
+    status: rowValue(row, "Status") || STATUS_PENDING,
+    token: rowValue(row, "Token"),
+  };
+}
+
+/** Routes an action submitted from the review page. */
+function handleAction(action, booking) {
+  if (action === "approve") return handleApprove(booking);
+  if (action === "paid") return handleMarkPaid(booking);
+  if (action === "decline") return handleDecline(booking);
+  return htmlPage(
+    "Unknown action",
+    "<p>That is not something this page knows how to do.</p>"
+  );
+}
+
+function handleApprove(booking) {
+  if (booking.status !== STATUS_PENDING) {
+    return alreadyHandledPage(booking);
   }
 
-  if (!confirmed) {
-    return confirmationPage(
-      "Approve this booking?",
-      esc(name) + (service ? ", " + esc(service) : "") + (date ? ", " + esc(formatDateOnly(date)) : ""),
-      "This blocks " + esc(date ? formatDateOnly(date) : "the requested date") +
-        " on your calendar and emails " + esc(name) + " the $" + DEPOSIT_AMOUNT + " deposit instructions.",
-      buildActionUrl("approve", token)
-    );
-  }
-
+  // A real timed block rather than an all-day banner, now that a start time is
+  // collected. It runs the full six hours because that is the longest a set
+  // takes, and an over-long block is harmless here: capacity is not rationed,
+  // so this shapes her own view of the day rather than gating other bookings.
   try {
-    var eventDate = parseDateOnly(date);
-    if (eventDate) {
-      CalendarApp.getDefaultCalendar().createAllDayEvent(
-        "BOOKED — " + name + (service ? " — " + service : ""),
-        eventDate
-      );
+    var start = toStartDate(booking.date, booking.time);
+    var title = "Booked: " + booking.name + (booking.service ? ", " + booking.service : "");
+    var calendar = CalendarApp.getDefaultCalendar();
+
+    if (start) {
+      var end = new Date(start.getTime());
+      end.setHours(end.getHours() + LONGEST_SERVICE_HOURS);
+      calendar.createEvent(title, start, end, {
+        description:
+          booking.name + " booked " + (booking.service || "an appointment") +
+          " through the website. Allow " + SHORTEST_SERVICE_HOURS + " to " +
+          LONGEST_SERVICE_HOURS + " hours depending on length." +
+          (booking.email ? "\n\nContact: " + booking.email : "") +
+          (booking.phone ? "\nPhone: " + booking.phone : ""),
+      });
+    } else {
+      var dayOnly = parseDateOnly(booking.date);
+      if (dayOnly) calendar.createAllDayEvent(title, dayOnly);
     }
   } catch (err) {
     console.error("Could not create the calendar event: " + err);
   }
 
-  setRowStatus(row.rowIndex, STATUS_APPROVED);
+  setRowStatus(booking.rowIndex, STATUS_APPROVED);
 
-  if (email) {
+  if (booking.email) {
     MailApp.sendEmail({
-      to: email,
+      to: booking.email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
       subject: "Your appointment is approved, just the deposit left",
-      body: buildDepositPlainBody(name, date, service),
-      htmlBody: buildDepositHtmlBody(name, date, service),
+      body: buildDepositPlainBody(booking),
+      htmlBody: buildDepositHtmlBody(booking),
     });
   }
 
-  // A short receipt back to the studio with the "mark as paid" link ready
-  // for whenever the deposit actually lands — no need to dig up the
-  // original request email days later.
+  // A short receipt back to the studio carrying the review link, so the deposit
+  // can be marked off days later without digging out the original request.
   MailApp.sendEmail({
     to: OWNER_EMAIL,
     name: STUDIO_NAME + " website",
-    subject: "Approved — " + name + (service ? " · " + service : ""),
-    body:
-      "You approved " + name + "'s request for " + (date ? formatDateOnly(date) : "their date") +
-      ". They've been emailed the deposit instructions.\n\n" +
-      "Once you see the $" + DEPOSIT_AMOUNT + " land, click this to send their final confirmation:\n" +
-      buildActionUrl("paid", token),
-    htmlBody: buildOwnerReceiptHtml(name, service, date, token),
+    subject: "Approved: " + booking.name + (booking.service ? ", " + booking.service : ""),
+    body: buildOwnerReceiptPlain(booking),
+    htmlBody: buildOwnerReceiptHtml(booking),
   });
 
-  return htmlPage(
+  return resultPage(
     "Approved",
-    "<p>" + esc(name) + " has been emailed the deposit instructions, and " +
-      esc(date ? formatDateOnly(date) : "the date") +
-      " is now blocked on your calendar. Check your inbox for a follow-up with a button for once the deposit lands.</p>"
+    esc(booking.name) + " has been emailed the deposit instructions, and " +
+      esc(formatWhen(booking.date, booking.time) || "the date") +
+      " is now on your calendar. When the deposit arrives, open the booking " +
+      "again from the follow-up email to mark it received.",
+    booking
   );
 }
 
-function handleMarkPaid(row, token, name, date, email, currentStatus, confirmed) {
-  if (currentStatus === STATUS_CONFIRMED) {
-    return htmlPage("Already confirmed", "<p>" + esc(name) + "&rsquo;s booking is already confirmed.</p>");
+function handleMarkPaid(booking) {
+  if (booking.status === STATUS_CONFIRMED) {
+    return resultPage(
+      "Already confirmed",
+      esc(booking.name) + " has already had their confirmation, so nothing changed.",
+      booking
+    );
   }
-  if (currentStatus !== STATUS_APPROVED) {
-    return htmlPage(
-      "Not ready yet",
-      "<p>This request is currently <strong>" + esc(currentStatus) +
-        "</strong>, not awaiting a deposit. If that looks wrong, check the sheet.</p>"
+  if (booking.status !== STATUS_APPROVED) {
+    return resultPage(
+      "Not ready for that yet",
+      "This booking is currently marked <strong>" + esc(booking.status) +
+        "</strong>, so there is no deposit outstanding on it. Approve it first " +
+        "if that is what you meant to do.",
+      booking
     );
   }
 
-  if (!confirmed) {
-    return confirmationPage(
-      "Mark this deposit as received?",
-      esc(name) + (date ? " — " + esc(formatDateOnly(date)) : ""),
-      "This sends " + esc(name) + " their final confirmation for " +
-        esc(date ? formatDateOnly(date) : "their appointment") + ".",
-      buildActionUrl("paid", token)
-    );
-  }
+  setRowStatus(booking.rowIndex, STATUS_CONFIRMED);
 
-  setRowStatus(row.rowIndex, STATUS_CONFIRMED);
-
-  if (email) {
+  if (booking.email) {
     MailApp.sendEmail({
-      to: email,
+      to: booking.email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
       subject: "Your appointment is confirmed",
-      body: buildConfirmedPlainBody(name, date),
-      htmlBody: buildConfirmedHtmlBody(name, date),
+      body: buildConfirmedPlainBody(booking),
+      htmlBody: buildConfirmedHtmlBody(booking),
     });
   }
 
-  return htmlPage("Confirmed", "<p>" + esc(name) + " has been sent their final confirmation.</p>");
+  return resultPage(
+    "Confirmed",
+    esc(booking.name) + " has been sent their confirmation for " +
+      esc(formatWhen(booking.date, booking.time) || "their appointment") + ".",
+    booking
+  );
 }
 
-function handleDecline(row, token, name, email, currentStatus, confirmed) {
-  if (currentStatus === STATUS_DECLINED) {
-    return htmlPage("Already declined", "<p>This request was already declined.</p>");
+function handleDecline(booking) {
+  if (booking.status === STATUS_DECLINED) {
+    return resultPage(
+      "Already declined",
+      "This booking was already declined, so nothing changed.",
+      booking
+    );
   }
-
-  if (!confirmed) {
-    return confirmationPage(
-      "Decline this booking?",
-      esc(name),
-      "This sends " + esc(name) + " a polite note that the date doesn&rsquo;t work.",
-      buildActionUrl("decline", token)
+  if (booking.status === STATUS_CONFIRMED) {
+    return resultPage(
+      "This one is already confirmed",
+      esc(booking.name) + " has paid a deposit and been told the appointment is " +
+        "going ahead, so declining it here would leave them with two " +
+        "contradictory emails. Contact them directly instead.",
+      booking
     );
   }
 
-  setRowStatus(row.rowIndex, STATUS_DECLINED);
+  setRowStatus(booking.rowIndex, STATUS_DECLINED);
 
-  if (email) {
+  if (booking.email) {
     MailApp.sendEmail({
-      to: email,
+      to: booking.email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
       subject: "About your booking request",
-      body: buildDeclinedPlainBody(name),
-      htmlBody: buildDeclinedHtmlBody(name),
+      body: buildDeclinedPlainBody(booking),
+      htmlBody: buildDeclinedHtmlBody(booking),
     });
   }
 
-  return htmlPage("Declined", "<p>" + esc(name) + " has been sent a note that the date doesn&rsquo;t work.</p>");
+  return resultPage(
+    "Declined",
+    esc(booking.name) + " has been told that date is not available, and invited " +
+      "to suggest another.",
+    booking
+  );
 }
 
-function buildActionUrl(action, token) {
-  return ScriptApp.getService().getUrl() +
-    "?action=" + encodeURIComponent(action) +
-    "&token=" + encodeURIComponent(token);
+function alreadyHandledPage(booking) {
+  return resultPage(
+    "Already handled",
+    esc(booking.name) + "&rsquo;s booking is already marked <strong>" +
+      esc(booking.status) + "</strong>, so nothing changed.",
+    booking
+  );
+}
+
+/** The review link that goes in the studio's emails. */
+function buildReviewUrl(token) {
+  return webAppUrl() + "?token=" + encodeURIComponent(token);
+}
+
+function webAppUrl() {
+  return ScriptApp.getService().getUrl();
 }
 
 /* ================================================================== */
 /* Calendar                                                             */
 /* ================================================================== */
 
+/** The studio's working window, mirrored from lib/availability.ts. */
+var SHORTEST_SERVICE_HOURS = 4;
+var LONGEST_SERVICE_HOURS = 6;
+
+/** "09:30" to a readable "9:30 AM". Falls back to whatever it was given. */
+function formatTimeOnly(value) {
+  if (!value) return "";
+  var parts = String(value).split(":");
+  if (parts.length < 2) return String(value);
+  var hour = parseInt(parts[0], 10);
+  var minute = parts[1].slice(0, 2);
+  if (isNaN(hour)) return String(value);
+  var period = hour < 12 ? "AM" : "PM";
+  var hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return hour12 + ":" + minute + " " + period;
+}
+
+/** A date and a start time as one phrase, skipping whichever is missing. */
+function formatWhen(dateValue, timeValue) {
+  var date = formatDateOnly(dateValue);
+  var time = formatTimeOnly(timeValue);
+  if (date && time) return date + " at " + time;
+  return date || time || "";
+}
+
+/** Combines the date and "HH:MM" into a real start instant, or null. */
+function toStartDate(dateValue, timeValue) {
+  var date = parseDateOnly(dateValue);
+  if (!date) return null;
+  var parts = String(timeValue || "").split(":");
+  var hour = parseInt(parts[0], 10);
+  var minute = parseInt(parts[1], 10);
+  if (isNaN(hour)) return null;
+  date.setHours(hour, isNaN(minute) ? 0 : minute, 0, 0);
+  return date;
+}
+
+/**
+ * Tells the studio what else is already on the requested date, with times, so
+ * she can judge it at a glance. Deliberately informational: she works with a
+ * team and takes several clients at once, so nothing here blocks a booking.
+ */
 function describeCalendarConflict(dateStr) {
   var date = parseDateOnly(dateStr);
   if (!date) return "";
 
   var events = CalendarApp.getDefaultCalendar().getEventsForDay(date);
   if (events.length === 0) {
-    return "This date is currently open on your calendar.";
+    return "Nothing else is on your calendar that day.";
   }
-  var count = events.length;
-  return "Heads up — you already have " + count + " " +
-    (count === 1 ? "thing" : "things") + " on your calendar this date.";
+
+  var described = [];
+  for (var i = 0; i < events.length; i++) {
+    var title = events[i].getTitle ? events[i].getTitle() : "";
+    var start = events[i].getStartTime ? events[i].getStartTime() : null;
+    var when = start
+      ? Utilities.formatDate(start, STUDIO_TIMEZONE, "h:mm a")
+      : "";
+    described.push(when ? when + " " + title : title);
+  }
+
+  return (
+    "Already on your calendar that day: " + described.join(", ") + "."
+  );
 }
 
 /**
@@ -469,6 +601,7 @@ function logToSheet(received, data, token) {
     data.notes || "",
     STATUS_PENDING,
     token,
+    data.time || "",
   ]);
 }
 
@@ -613,15 +746,90 @@ function htmlPage(title, bodyHtml) {
   return HtmlService.createHtmlOutput(wrapEmailShell("", title, "", styledBody));
 }
 
-/** The "are you sure?" page every action link shows before it does anything. */
-function confirmationPage(title, subject, explanation, confirmUrl) {
+/**
+ * A submit button inside a POST form. The mutation lives behind POST so that
+ * link-scanning mail clients cannot trigger it, which is what allowed the old
+ * two-step confirmation page to be removed.
+ */
+function actionForm(token, action, label, variant) {
+  var isPrimary = variant !== "outline";
+  var bg = isPrimary ? MAGENTA : "transparent";
+  var fg = isPrimary ? BONE : INK_PLUM;
+  var border = isPrimary ? MAGENTA : INK_PLUM;
+
+  return (
+    '<form method="post" action="' + esc(webAppUrl()) +
+    '" target="_top" style="display:inline-block;margin:0 10px 10px 0;">' +
+    '<input type="hidden" name="action" value="' + esc(action) + '">' +
+    '<input type="hidden" name="token" value="' + esc(token) + '">' +
+    '<button type="submit" style="cursor:pointer;background:' + bg + ";color:" + fg +
+    ";border:1px solid " + border + ';padding:13px 24px;border-radius:2px;' +
+    'font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;' +
+    'letter-spacing:.02em;">' + esc(label) + "</button></form>"
+  );
+}
+
+/** The page the studio lands on from the email: full detail, then one action. */
+function managePage(booking) {
+  var rows =
+    detailRow("Appointment", esc(formatWhen(booking.date, booking.time))) +
+    detailRow("Service", esc(booking.service)) +
+    detailRow(
+      "Email",
+      booking.email ? link("mailto:" + booking.email, booking.email, MAGENTA) : ""
+    ) +
+    detailRow(
+      "Phone",
+      booking.phone
+        ? link("tel:" + String(booking.phone).replace(/\s+/g, ""), booking.phone, MAGENTA)
+        : ""
+    ) +
+    detailRow("Notes", booking.notes ? esc(booking.notes) : "") +
+    detailRow("Status", esc(booking.status));
+
+  var actions = "";
+  if (booking.status === STATUS_PENDING) {
+    actions =
+      '<p style="margin:26px 0 14px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+      MUTED + ';">Approving puts this on your calendar and emails ' + esc(booking.name) +
+      " the $" + DEPOSIT_AMOUNT + " deposit details. Declining lets them know the " +
+      "date is not available.</p>" +
+      actionForm(booking.token, "approve", "Approve booking", "primary") +
+      actionForm(booking.token, "decline", "Decline", "outline");
+  } else if (booking.status === STATUS_APPROVED) {
+    actions =
+      '<p style="margin:26px 0 14px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+      MUTED + ';">Waiting on the $' + DEPOSIT_AMOUNT +
+      " deposit. Once you can see it in Zelle, Cash App or Apple Pay, mark it " +
+      "received and " + esc(booking.name) + " gets their confirmation.</p>" +
+      actionForm(booking.token, "paid", "Deposit received", "primary");
+  } else {
+    actions =
+      '<p style="margin:26px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+      MUTED + ';">Nothing is outstanding on this booking.</p>';
+  }
+
   var body =
-    '<p style="margin:0 0 8px;font-family:Helvetica,Arial,sans-serif;font-size:16px;color:' +
-    INK_PLUM + ';">' + subject + "</p>" +
-    '<p style="margin:0 0 24px;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:' +
-    MUTED + ';">' + explanation + "</p>" +
-    button(confirmUrl + "&confirm=1", "Yes, continue", "primary");
-  return HtmlService.createHtmlOutput(wrapEmailShell("", title, "", body));
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' +
+    rows + "</table>" + actions;
+
+  return HtmlService.createHtmlOutput(
+    wrapEmailShell("Booking review", booking.name, "", body)
+  ).setTitle(STUDIO_NAME + " booking");
+}
+
+/** Shown after an action runs, with a way back to the booking. */
+function resultPage(title, messageHtml, booking) {
+  var body =
+    '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
+    INK_PLUM + ';">' + messageHtml + "</p>" +
+    '<p style="margin:24px 0 0;">' +
+    link(buildReviewUrl(booking.token), "View this booking again", MAGENTA) +
+    "</p>";
+
+  return HtmlService.createHtmlOutput(
+    wrapEmailShell("", title, "", body)
+  ).setTitle(STUDIO_NAME + " booking");
 }
 
 /* ================================================================== */
@@ -630,139 +838,137 @@ function confirmationPage(title, subject, explanation, confirmUrl) {
 
 function buildOwnerHtmlBody(received, data, calendarNote, token) {
   var rows =
+    detailRow("Appointment", esc(formatWhen(data.date, data.time))) +
+    detailRow("Service", esc(data.service)) +
     detailRow("Email", data.email ? link("mailto:" + data.email, data.email, MAGENTA) : "") +
     detailRow(
       "Phone",
       data.phone ? link("tel:" + String(data.phone).replace(/\s+/g, ""), data.phone, MAGENTA) : ""
-    ) +
-    detailRow("Service", esc(data.service)) +
-    detailRow("Preferred date", esc(data.date ? formatDateOnly(data.date) : ""));
+    );
 
   var notes = data.notes
     ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" ' +
       'style="margin-top:24px;background:' + BLUSH + ';border-radius:2px;">' +
       '<tr><td style="padding:20px 22px;">' +
       '<p style="margin:0 0 8px;font-family:Helvetica,Arial,sans-serif;font-size:11px;' +
-      "letter-spacing:1.2px;text-transform:uppercase;color:" + MAGENTA + ';">Anything we should know</p>' +
+      "letter-spacing:1.2px;text-transform:uppercase;color:" + MAGENTA + ';">From the client</p>' +
       '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:' +
       INK_PLUM + ';">' + esc(data.notes).replace(/\n/g, "<br>") + "</p></td></tr></table>"
     : "";
 
   var calendarBlock = calendarNote
-    ? '<p style="margin:20px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:' +
+    ? '<p style="margin:22px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
       MUTED + ';">' + esc(calendarNote) + "</p>"
     : "";
 
-  var actions =
+  var action =
     '<div style="margin-top:28px;">' +
-    button(buildActionUrl("approve", token), "Approve", "primary") +
-    '<span style="display:inline-block;width:12px;"></span>' +
-    button(buildActionUrl("decline", token), "Decline", "outline") +
-    "</div>";
-
-  var replyNote = data.email
-    ? '<p style="margin:20px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:' +
-      MUTED + ';">Hit reply and it goes straight to ' +
-      esc(String(data.name || "them").replace(/\.\s*$/, "")) + ".</p>"
-    : "";
+    button(buildReviewUrl(token), "Review this booking", "primary") +
+    "</div>" +
+    '<p style="margin:14px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:' +
+    MUTED + ';">Approve or decline it from there. You can also just hit reply, ' +
+    "which goes straight to the client.</p>";
 
   var body =
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + rows + "</table>" +
-    notes + calendarBlock + actions + replyNote;
+    notes + calendarBlock + action;
 
   return wrapEmailShell(
     "New booking request",
     data.name || "New request",
-    timestamp(received),
+    "Received " + timestamp(received),
     body,
-    "Sent from the " + STUDIO_NAME + " booking form. A copy is saved in your requests sheet."
+    "Sent by the " + STUDIO_NAME + " booking form. A copy is saved in your requests sheet."
   );
 }
 
 function buildOwnerPlainBody(received, data, calendarNote, token) {
   var lines = [
     "New booking request",
-    timestamp(received),
+    "Received " + timestamp(received),
     "",
-    "Name: " + (data.name || "—"),
-    "Email: " + (data.email || "—"),
-    "Phone: " + (data.phone || "—"),
-    "Service: " + (data.service || "—"),
-    "Preferred date: " + (data.date ? formatDateOnly(data.date) : "—"),
+    "Name: " + (data.name || "not given"),
+    "Appointment: " + (formatWhen(data.date, data.time) || "not given"),
+    "Service: " + (data.service || "not given"),
+    "Email: " + (data.email || "not given"),
+    "Phone: " + (data.phone || "not given"),
   ];
 
-  if (data.notes) lines.push("", "Notes:", data.notes);
+  if (data.notes) lines.push("", "From the client:", data.notes);
   if (calendarNote) lines.push("", calendarNote);
 
-  lines.push(
-    "",
-    "Approve: " + buildActionUrl("approve", token),
-    "Decline: " + buildActionUrl("decline", token)
-  );
+  lines.push("", "Review this booking: " + buildReviewUrl(token));
 
   return lines.join("\n");
 }
 
-/* ================================================================== */
-/* Client-facing emails                                                */
-/* ================================================================== */
-
 function buildAckHtmlBody(data) {
-  var what =
-    (data.service ? "<strong>" + esc(data.service) + "</strong>" : "your appointment") +
-    (data.date ? " on <strong>" + esc(formatDateOnly(data.date)) + "</strong>" : "");
-
   var body =
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">Thank you for reaching out. We have your request for ' + what +
-    ", and we will get back to you within one business day to confirm it.</p>";
+    INK_PLUM + ';">Thank you for reaching out. We have your request for <strong>' +
+    esc(data.service || "an appointment") + "</strong> on <strong>" +
+    esc(formatWhen(data.date, data.time) || "the date you chose") +
+    "</strong>, and we will get back to you within one business day to confirm it.</p>" +
+    '<p style="margin:18px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+    MUTED + ';">Most styles take ' + SHORTEST_SERVICE_HOURS + " to " + LONGEST_SERVICE_HOURS +
+    " hours depending on the length you are going for, so do plan for a long, " +
+    "comfortable sitting.</p>";
 
   return wrapEmailShell("Request received", "Thank you, " + (data.name || "there"), "", body);
 }
 
 function buildAckPlainBody(data) {
-  var what =
-    (data.service || "your appointment") +
-    (data.date ? " on " + formatDateOnly(data.date) : "");
+  return [
+    "Thank you for reaching out. We have your request for " +
+      (data.service || "an appointment") + " on " +
+      (formatWhen(data.date, data.time) || "the date you chose") +
+      ", and we will get back to you within one business day to confirm it.",
+    "",
+    "Most styles take " + SHORTEST_SERVICE_HOURS + " to " + LONGEST_SERVICE_HOURS +
+      " hours depending on the length you are going for, so do plan for a long, " +
+      "comfortable sitting.",
+  ].join("\n");
+}
 
+function paymentOptionsHtml() {
   return (
-    "Thank you for reaching out. We have your request for " + what +
-    ", and we will get back to you within one business day to confirm it."
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" ' +
+    'style="margin:4px 0 0;background:' + BLUSH + ';border-radius:2px;">' +
+    '<tr><td style="padding:20px 22px;font-family:Helvetica,Arial,sans-serif;' +
+    "font-size:15px;line-height:1.9;color:" + INK_PLUM + ';">' +
+    "<strong>Zelle</strong>&nbsp;&nbsp;" + esc(ZELLE_HANDLE) + "<br>" +
+    "<strong>Cash App</strong>&nbsp;&nbsp;" + esc(CASHAPP_HANDLE) + "<br>" +
+    "<strong>Apple Pay</strong>&nbsp;&nbsp;" + esc(APPLE_PAY_HANDLE) +
+    "</td></tr></table>"
   );
 }
 
-function buildDepositHtmlBody(name, date, service) {
-  var payments =
-    '<ul style="margin:0;padding-left:18px;font-family:Helvetica,Arial,sans-serif;font-size:15px;' +
-    "line-height:1.9;color:" + INK_PLUM + ';">' +
-    "<li><strong>Zelle:</strong> " + esc(ZELLE_HANDLE) + "</li>" +
-    "<li><strong>Cash App:</strong> " + esc(CASHAPP_HANDLE) + "</li>" +
-    "<li><strong>Apple Pay:</strong> " + esc(APPLE_PAY_HANDLE) + "</li>" +
-    "</ul>";
-
+function buildDepositHtmlBody(booking) {
   var body =
     '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">Good news, your appointment for <strong>' +
-    esc(service || "your style") + "</strong> on <strong>" +
-    esc(date ? formatDateOnly(date) : "your chosen date") + "</strong> has been approved.</p>" +
-    '<p style="margin:0 0 12px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
+    INK_PLUM + ';">Good news. Your appointment for <strong>' +
+    esc(booking.service || "your style") + "</strong> on <strong>" +
+    esc(formatWhen(booking.date, booking.time) || "your chosen date") +
+    "</strong> has been approved.</p>" +
+    '<p style="margin:0 0 14px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
     INK_PLUM + ';">All that is left is the $' + DEPOSIT_AMOUNT +
-    " deposit, which holds your spot and comes off your total on the day. You can send it whichever way is easiest for you:</p>" +
-    payments +
-    '<p style="margin:24px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' + MUTED +
-    ';">Once you have sent it, reply to this email so we know to expect you.</p>';
+    " deposit, which holds your spot and comes off your total on the day. " +
+    "Send it whichever way is easiest for you.</p>" +
+    paymentOptionsHtml() +
+    '<p style="margin:22px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+    MUTED + ';">Once you have sent it, reply to this email so we know to expect you.</p>';
 
-  return wrapEmailShell("Approved", "You are booked in, " + name, "", body);
+  return wrapEmailShell("Approved", "You are booked in, " + booking.name, "", body);
 }
 
-function buildDepositPlainBody(name, date, service) {
+function buildDepositPlainBody(booking) {
   return [
-    "Good news, your appointment for " + (service || "your style") +
-      " on " + (date ? formatDateOnly(date) : "your chosen date") + " has been approved.",
+    "Good news. Your appointment for " + (booking.service || "your style") + " on " +
+      (formatWhen(booking.date, booking.time) || "your chosen date") + " has been approved.",
     "",
     "All that is left is the $" + DEPOSIT_AMOUNT +
-      " deposit, which holds your spot and comes off your total on the day.",
-    "You can send it whichever way is easiest for you:",
+      " deposit, which holds your spot and comes off your total on the day. " +
+      "Send it whichever way is easiest for you.",
     "",
     "Zelle: " + ZELLE_HANDLE,
     "Cash App: " + CASHAPP_HANDLE,
@@ -772,64 +978,81 @@ function buildDepositPlainBody(name, date, service) {
   ].join("\n");
 }
 
-function buildConfirmedHtmlBody(name, date) {
+function buildConfirmedHtmlBody(booking) {
   var body =
-    '<p style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">We have received your deposit, so your appointment on <strong>' +
-    esc(date ? formatDateOnly(date) : "your chosen date") +
+    '<p style="margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
+    INK_PLUM + ';">We have received your deposit, so <strong>' +
+    esc(formatWhen(booking.date, booking.time) || "your appointment") +
     "</strong> is fully confirmed. We are looking forward to seeing you.</p>" +
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">Before you come, please arrive with clean, dry and detangled hair unless a wash is ' +
-    "included in your service, and do try to arrive on time so we can give you the full appointment.</p>";
+    MUTED + ';">Please come with clean, dry and detangled hair unless a wash is ' +
+    "included in your service, and try to arrive on time so you get the full " +
+    "appointment. Set aside " + SHORTEST_SERVICE_HOURS + " to " + LONGEST_SERVICE_HOURS +
+    " hours depending on your length.</p>";
 
-  return wrapEmailShell("Confirmed", "You are all set, " + name, "", body);
+  return wrapEmailShell("Confirmed", "You are all set, " + booking.name, "", body);
 }
 
-function buildConfirmedPlainBody(name, date) {
+function buildConfirmedPlainBody(booking) {
   return [
-    "We have received your deposit, so your appointment on " +
-      (date ? formatDateOnly(date) : "your chosen date") +
+    "We have received your deposit, so " +
+      (formatWhen(booking.date, booking.time) || "your appointment") +
       " is fully confirmed. We are looking forward to seeing you.",
     "",
-    "Before you come, please arrive with clean, dry and detangled hair unless a wash is included " +
-      "in your service, and do try to arrive on time so we can give you the full appointment.",
+    "Please come with clean, dry and detangled hair unless a wash is included in " +
+      "your service, and try to arrive on time so you get the full appointment. " +
+      "Set aside " + SHORTEST_SERVICE_HOURS + " to " + LONGEST_SERVICE_HOURS +
+      " hours depending on your length.",
   ].join("\n");
 }
 
-function buildDeclinedHtmlBody(name) {
+function buildDeclinedHtmlBody(booking) {
   var body =
-    '<p style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">Thank you for thinking of us. Unfortunately we are not able to take that date, ' +
-    "so we cannot confirm this appointment.</p>" +
+    '<p style="margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
+    INK_PLUM + ';">Thank you for thinking of us. Unfortunately we are not able to ' +
+    "take " + esc(formatWhen(booking.date, booking.time) || "that date") +
+    ", so we cannot confirm this appointment.</p>" +
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">If you are still interested, reply with another date that suits you and we will ' +
-    "check what we have available.</p>";
+    MUTED + ';">If you are still interested, reply with another date that suits ' +
+    "you and we will check what we have available.</p>";
 
-  return wrapEmailShell("About your request", "Sorry about this, " + name, "", body);
+  return wrapEmailShell("About your request", "Sorry about this, " + booking.name, "", body);
 }
 
-function buildDeclinedPlainBody(name) {
+function buildDeclinedPlainBody(booking) {
   return [
-    "Thank you for thinking of us. Unfortunately we are not able to take that date, " +
-      "so we cannot confirm this appointment.",
+    "Thank you for thinking of us. Unfortunately we are not able to take " +
+      (formatWhen(booking.date, booking.time) || "that date") +
+      ", so we cannot confirm this appointment.",
     "",
-    "If you are still interested, reply with another date that suits you and we will " +
-      "check what we have available.",
+    "If you are still interested, reply with another date that suits you and we " +
+      "will check what we have available.",
   ].join("\n");
 }
 
-/* ================================================================== */
-/* Owner receipt (sent right after approving)                          */
-/* ================================================================== */
-
-function buildOwnerReceiptHtml(name, service, date, token) {
+function buildOwnerReceiptHtml(booking) {
   var body =
     '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">' + esc(name) + " has been emailed the $" + DEPOSIT_AMOUNT + " deposit instructions for " +
-    esc(date ? formatDateOnly(date) : "their date") + (service ? " (" + esc(service) + ")" : "") + ".</p>" +
+    INK_PLUM + ';">' + esc(booking.name) + " has been emailed the $" + DEPOSIT_AMOUNT +
+    " deposit details for " + esc(formatWhen(booking.date, booking.time) || "their date") +
+    ", and it is now on your calendar.</p>" +
     '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">Once you see the $' + DEPOSIT_AMOUNT + " land in Zelle, Cash App, or Apple Pay, click below:</p>" +
-    button(buildActionUrl("paid", token), "Mark deposit as received", "primary");
+    MUTED + ';">When the deposit shows up in Zelle, Cash App or Apple Pay, open ' +
+    "the booking and mark it received. That sends the final confirmation.</p>" +
+    button(buildReviewUrl(booking.token), "Open this booking", "primary");
 
   return wrapEmailShell("Booking approved", "Waiting on the deposit", "", body);
+}
+
+function buildOwnerReceiptPlain(booking) {
+  return [
+    booking.name + " has been emailed the $" + DEPOSIT_AMOUNT + " deposit details for " +
+      (formatWhen(booking.date, booking.time) || "their date") +
+      ", and it is now on your calendar.",
+    "",
+    "When the deposit shows up in Zelle, Cash App or Apple Pay, open the booking " +
+      "and mark it received. That sends the final confirmation.",
+    "",
+    buildReviewUrl(booking.token),
+  ].join("\n");
 }

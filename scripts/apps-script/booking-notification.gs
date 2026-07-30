@@ -10,7 +10,6 @@
 
 var OWNER_EMAIL = "Adedijikikelomo@gmail.com";
 var STUDIO_NAME = "HAIRBYBELLES";
-var CALENDAR_ID = "adedijikikelomo@gmail.com";
 
 // Garland, Texas: Central Time, including daylight-saving changes.
 var STUDIO_TIMEZONE = "America/Chicago";
@@ -253,16 +252,8 @@ function reserveCalendarSlot(data) {
   }
 
   var end = new Date(start.getTime() + LONGEST_SERVICE_HOURS * 60 * 60 * 1000);
-  var events = getBookingCalendar().getEvents(start, end);
+  var events = CalendarApp.getDefaultCalendar().getEvents(start, end);
   return { isAvailable: events.length === 0, start: start, end: end };
-}
-
-function getBookingCalendar() {
-  var calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-  if (!calendar) {
-    throw new Error("The HairByBelles calendar could not be found or accessed.");
-  }
-  return calendar;
 }
 
 function isBookableStartTime(timeValue) {
@@ -282,7 +273,7 @@ function createCalendarEvent(booking, start, end) {
   var title = "Booked: " + booking.name +
     (booking.service ? ", " + booking.service : "");
 
-  getBookingCalendar().createEvent(title, start, end, {
+  CalendarApp.getDefaultCalendar().createEvent(title, start, end, {
     description:
       booking.name + " booked " + (booking.service || "an appointment") +
       " through the website. Allow " + SHORTEST_SERVICE_HOURS + " to " +

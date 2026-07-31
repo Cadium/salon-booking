@@ -132,8 +132,11 @@ function handleFormSubmission(data) {
       notifyDeclinedBooking(booking);
     }
   } catch (err) {
-    console.error("Could not process booking: " + err);
-    return ContentService.createTextOutput("Unable to process booking");
+    var message = String(err && err.message ? err.message : err);
+    console.error("Could not process booking: " + message);
+    // The site keeps this private from clients, but Vercel records it so the
+    // actual integration failure can be diagnosed without guessing.
+    return ContentService.createTextOutput("BOOKING_ERROR: " + message);
   } finally {
     lock.releaseLock();
   }

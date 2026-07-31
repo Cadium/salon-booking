@@ -10,6 +10,7 @@
 
 var OWNER_EMAIL = "Adedijikikelomo@gmail.com";
 var STUDIO_NAME = "HAIRBYBELLES";
+var BOOKING_FORM_URL = "https://hairbybelles.com/#book";
 
 // Garland, Texas: Central Time, including daylight-saving changes.
 var STUDIO_TIMEZONE = "America/Chicago";
@@ -33,10 +34,10 @@ var SHEET_HEADERS = [
   "Start time",
 ];
 
-var STATUS_ACCEPTED = "Accepted — awaiting deposit";
+var STATUS_ACCEPTED = "Accepted - awaiting deposit";
 var STATUS_PROCESSING = "Processing";
 // Supports existing deposit links created before automatic booking.
-var STATUS_LEGACY_APPROVED = "Approved — awaiting deposit";
+var STATUS_LEGACY_APPROVED = "Approved - awaiting deposit";
 var STATUS_CONFIRMED = "Confirmed";
 var STATUS_DECLINED = "Declined";
 
@@ -136,6 +137,7 @@ function handleFormSubmission(data) {
       notifyAcceptedBooking(booking);
     } else {
       booking = logToSheet(received, data, token, STATUS_DECLINED);
+      booking.suggestedSlots = result.suggestedSlots;
       notifyDeclinedBooking(booking);
     }
   } catch (err) {
@@ -253,12 +255,10 @@ var OPENING_HOUR = 7;
 var CLOSING_HOUR = 19;
 
 function formatTimeOnly(value) {
-  if (!value) return "";
-  var parts = String(value).split(":");
-  if (parts.length < 2) return String(value);
-  var hour = parseInt(parts[0], 10);
-  var minute = parts[1].slice(0, 2);
-  if (isNaN(hour)) return String(value);
+  var parts = timePartsFor(value);
+  if (!parts) return "";
+  var hour = parts.hour;
+  var minute = parts.minute;
   var period = hour < 12 ? "AM" : "PM";
   var hour12 = hour % 12 === 0 ? 12 : hour % 12;
   return hour12 + ":" + minute + " " + period;
@@ -274,15 +274,17 @@ function formatWhen(dateValue, timeValue) {
 function toStartDate(dateValue, timeValue) {
   var dateParts = datePartsFor(dateValue);
   if (!dateParts) return null;
-  var parts = String(timeValue || "").split(":");
-  var hour = parseInt(parts[0], 10);
-  var minute = parseInt(parts[1], 10);
-  if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-    return null;
-  }
+  var timeParts = timePartsFor(timeValue);
+  if (!timeParts) return null;
 
   // Interpret the chosen wall time in Central Time, not the script timezone.
-  var wallTime = Date.UTC(dateParts.year, dateParts.month - 1, dateParts.day, hour, minute);
+  var wallTime = Date.UTC(
+    dateParts.year,
+    dateParts.month - 1,
+    dateParts.day,
+    timeParts.hour,
+    parseInt(timeParts.minute, 10)
+  );
   var offset = timezoneOffsetMinutes(new Date(wallTime));
   return new Date(wallTime - offset * 60 * 1000);
 }
@@ -296,20 +298,76 @@ function reserveCalendarSlot(data) {
 
   var end = new Date(start.getTime() + LONGEST_SERVICE_HOURS * 60 * 60 * 1000);
   var events = CalendarApp.getDefaultCalendar().getEvents(start, end);
-  return { isAvailable: events.length === 0, start: start, end: end };
+  return {
+    isAvailable: events.length === 0,
+    start: start,
+    end: end,
+    suggestedSlots: events.length === 0 ? [] : findSuggestedSlots(data.date, start),
+  };
+}
+
+function findSuggestedSlots(dateValue, requestedStart) {
+  var suggestions = [];
+  var calendar = CalendarApp.getDefaultCalendar();
+  var firstDay = datePartsFor(dateValue);
+  if (!firstDay) return suggestions;
+
+  // Offer the next three real openings, looking across the next seven days.
+  for (var dayOffset = 0; dayOffset < 7 && suggestions.length < 3; dayOffset++) {
+    var current = new Date(Date.UTC(firstDay.year, firstDay.month - 1, firstDay.day + dayOffset));
+    var dayValue = current.getUTCFullYear() + "-" +
+      (current.getUTCMonth() + 1 < 10 ? "0" : "") + (current.getUTCMonth() + 1) + "-" +
+      (current.getUTCDate() < 10 ? "0" : "") + current.getUTCDate();
+
+    for (var minutes = OPENING_HOUR * 60; minutes <= CLOSING_HOUR * 60; minutes += 30) {
+      var hour = Math.floor(minutes / 60);
+      var minute = minutes % 60;
+      var timeValue = (hour < 10 ? "0" : "") + hour + ":" + (minute === 0 ? "00" : "30");
+      var candidateStart = toStartDate(dayValue, timeValue);
+      if (!candidateStart || candidateStart.getTime() <= requestedStart.getTime()) continue;
+
+      var candidateEnd = new Date(
+        candidateStart.getTime() + LONGEST_SERVICE_HOURS * 60 * 60 * 1000
+      );
+      if (calendar.getEvents(candidateStart, candidateEnd).length === 0) {
+        suggestions.push({ date: dayValue, time: timeValue });
+        if (suggestions.length === 3) return suggestions;
+      }
+    }
+  }
+
+  return suggestions;
 }
 
 function isBookableStartTime(timeValue) {
-  if (!/^\d{2}:(00|30)$/.test(String(timeValue || ""))) return false;
-  var parts = String(timeValue).split(":");
-  var hour = parseInt(parts[0], 10);
-  var minute = parseInt(parts[1], 10);
+  var parts = timePartsFor(timeValue);
+  if (!parts || (parts.minute !== "00" && parts.minute !== "30")) return false;
+  var hour = parts.hour;
+  var minute = parseInt(parts.minute, 10);
   var totalMinutes = hour * 60 + minute;
   return (
     !isNaN(hour) && !isNaN(minute) &&
     totalMinutes >= OPENING_HOUR * 60 && totalMinutes <= CLOSING_HOUR * 60 &&
     (minute === 0 || minute === 30)
   );
+}
+
+function timePartsFor(value) {
+  var match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (!match) return null;
+
+  var hour = parseInt(match[1], 10);
+  var minute = match[2];
+  var period = match[3] ? match[3].toUpperCase() : "";
+
+  if (isNaN(hour) || hour < 0 || hour > 23) return null;
+  if (period) {
+    if (hour < 1 || hour > 12) return null;
+    if (period === "PM" && hour !== 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+  }
+
+  return { hour: hour, minute: minute };
 }
 
 function createCalendarEvent(booking, start, end) {
@@ -403,7 +461,7 @@ function getLogSheet() {
     }
   }
 
-  var created = SpreadsheetApp.create(STUDIO_NAME + " — booking requests");
+  var created = SpreadsheetApp.create(STUDIO_NAME + " - booking requests");
   props.setProperty("LOG_SPREADSHEET_ID", created.getId());
   console.info("Created request log: " + created.getUrl());
   return created.getSheets()[0];
@@ -428,9 +486,14 @@ function logToSheet(received, data, token, status) {
     rowIndex,
     SHEET_HEADERS.indexOf("Preferred date") + 1
   );
+  var timeCell = sheet.getRange(
+    rowIndex,
+    SHEET_HEADERS.indexOf("Start time") + 1
+  );
 
-  // Store the date as text so Sheets cannot shift it by timezone.
+  // Store date and time as text so Sheets cannot alter either value.
   dateCell.setNumberFormat("@");
+  timeCell.setNumberFormat("@");
   sheet.getRange(rowIndex, 1, 1, SHEET_HEADERS.length).setValues([[
     received,
     data.name || "",
@@ -464,11 +527,14 @@ function findRowByToken(token) {
   if (lastRow < 2) return null;
 
   var values = sheet.getRange(2, 1, lastRow - 1, SHEET_HEADERS.length).getValues();
+  var displayedValues = sheet
+    .getRange(2, 1, lastRow - 1, SHEET_HEADERS.length)
+    .getDisplayValues();
   var tokenCol = SHEET_HEADERS.indexOf("Token");
 
   for (var i = 0; i < values.length; i++) {
     if (values[i][tokenCol] === token) {
-      return { rowIndex: i + 2, values: values[i] };
+      return { rowIndex: i + 2, values: displayedValues[i] };
     }
   }
   return null;
@@ -655,7 +721,7 @@ function notifyAcceptedBooking(booking) {
       to: booking.email,
       replyTo: OWNER_EMAIL,
       name: STUDIO_NAME,
-      subject: "Your appointment is booked — deposit details inside",
+      subject: "Your appointment is booked - deposit details inside",
       body: buildDepositPlainBody(booking),
       htmlBody: buildDepositHtmlBody(booking),
     });
@@ -730,8 +796,8 @@ function buildOwnerAcceptedHtmlBody(booking) {
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;">' +
     bookingDetailRows(booking) + "</table>" + bookingNotes(booking) +
     '<p style="margin:22px 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">When the deposit appears in Zelle, Cash App, or Apple Pay, open this booking and mark it received.</p>' +
-    button(buildReviewUrl(booking.token), "Open booking", "primary");
+    MUTED + ';">The booking details are above. When the deposit appears in Zelle, Cash App, or Apple Pay, use this button to confirm it.</p>' +
+    button(buildReviewUrl(booking.token), "Confirm deposit received", "primary");
   return wrapEmailShell(
     "Booked automatically",
     booking.name,
@@ -755,7 +821,7 @@ function buildOwnerAcceptedPlainBody(booking) {
   ];
 
   if (booking.notes) lines.push("", "From the client:", booking.notes);
-  lines.push("", "When the deposit arrives, mark it received here:", buildReviewUrl(booking.token));
+  lines.push("", "The booking details are above. When the deposit arrives, confirm it here:", buildReviewUrl(booking.token));
 
   return lines.join("\n");
 }
@@ -820,7 +886,7 @@ function buildDepositHtmlBody(booking) {
     "Send it whichever way is easiest for you.</p>" +
     paymentOptionsHtml() +
     '<p style="margin:22px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">Once you have sent it, reply to this email so we know to expect you.</p>';
+    MUTED + ';">Once you have sent it, nothing else is needed from you. We will email you when your deposit has been received.</p>';
 
   return wrapEmailShell("Appointment booked", "You are booked in, " + booking.name, "", body);
 }
@@ -838,7 +904,7 @@ function buildDepositPlainBody(booking) {
     "Cash App: " + CASHAPP_HANDLE,
     "Apple Pay: " + APPLE_PAY_HANDLE,
     "",
-    "Once you have sent it, reply to this email so we know to expect you.",
+    "Once you have sent it, nothing else is needed from you. We will email you when your deposit has been received.",
   ].join("\n");
 }
 
@@ -871,23 +937,41 @@ function buildConfirmedPlainBody(booking) {
 }
 
 function buildDeclinedHtmlBody(booking) {
+  var suggestions = booking.suggestedSlots || [];
+  var suggestionHtml = suggestions.length
+    ? '<p style="margin:0 0 10px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+      MUTED + ';">The next available appointment windows are:</p><ul style="margin:0 0 20px;padding-left:20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.8;color:' +
+      INK_PLUM + ';">' +
+      suggestions.map(function(slot) {
+        return "<li>" + esc(formatWhen(slot.date, slot.time)) + "</li>";
+      }).join("") + "</ul>"
+    : '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+      MUTED + ';">There are no later openings in the next seven days. Please choose another date using the booking form.</p>';
   var body =
     '<p style="margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:' +
-    INK_PLUM + ';">The time you selected — <strong>' +
+    INK_PLUM + ';">The time you selected, <strong>' +
     esc(formatWhen(booking.date, booking.time) || "your requested appointment") +
-    "</strong> — overlaps an appointment already on our calendar, so it is not available.</p>" +
-    '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-    MUTED + ';">Please reply with another time on that date, or another date that works for you, and we will be happy to check it.</p>';
+    "</strong>, overlaps an appointment already on our calendar, so it is not available.</p>" +
+    suggestionHtml +
+    '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
+    MUTED + ';">Please choose another available time or date using the booking form.</p>' +
+    button(BOOKING_FORM_URL, "Choose another time", "primary");
 
   return wrapEmailShell("Time unavailable", "Sorry, " + booking.name, "", body);
 }
 
 function buildDeclinedPlainBody(booking) {
-  return [
-    "The time you selected — " +
+  var lines = [
+    "The time you selected, " +
       (formatWhen(booking.date, booking.time) || "your requested appointment") +
-      " — overlaps an appointment already on our calendar, so it is not available.",
-    "",
-    "Please reply with another time on that date, or another date that works for you, and we will be happy to check it.",
-  ].join("\n");
+      ", overlaps an appointment already on our calendar, so it is not available.",
+  ];
+  if (booking.suggestedSlots && booking.suggestedSlots.length) {
+    lines.push("", "The next available appointment windows are:");
+    booking.suggestedSlots.forEach(function(slot) {
+      lines.push("- " + formatWhen(slot.date, slot.time));
+    });
+  }
+  lines.push("", "Choose another available time or date here: " + BOOKING_FORM_URL);
+  return lines.join("\n");
 }

@@ -21,6 +21,10 @@ const pillSelectedStyle = {
   color: "var(--magenta)",
 } as const;
 
+function RequiredMark() {
+  return <span aria-hidden="true" className="ml-1 text-magenta">*</span>;
+}
+
 /** Every way to reach the studio — shown when the form itself can't be used. */
 function DirectContacts() {
   return (
@@ -140,10 +144,13 @@ export function ReservationForm() {
       }}
       className="flex flex-col gap-8"
     >
+      <p className="-mb-3 text-sm text-muted-foreground">
+        <span aria-hidden="true" className="text-magenta">*</span> required fields
+      </p>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="flex flex-col gap-2">
           <label htmlFor="name" className={labelClasses}>
-            Your name
+            Your name <RequiredMark />
           </label>
           <input
             id="name"
@@ -156,7 +163,7 @@ export function ReservationForm() {
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="email" className={labelClasses}>
-            Email
+            Email <RequiredMark />
           </label>
           <input
             id="email"
@@ -169,12 +176,13 @@ export function ReservationForm() {
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="phone" className={labelClasses}>
-            Phone
+            Phone <RequiredMark />
           </label>
           <input
             id="phone"
             type="tel"
             name="phone"
+            required
             placeholder="(214) 555 0123"
             className={inputClasses}
           />
@@ -182,7 +190,7 @@ export function ReservationForm() {
       </div>
 
       <fieldset className="flex flex-col gap-3">
-        <legend className={labelClasses}>Service</legend>
+        <legend className={labelClasses}>Service <RequiredMark /></legend>
         <div className="flex flex-wrap gap-3">
           {services.map((service) => (
             <label
@@ -213,6 +221,7 @@ export function ReservationForm() {
             id="date"
             name="date"
             label="Preferred date"
+            required
             onChange={setDate}
             invalid={showMissing && !date}
             describedBy={showMissing && !date ? "appointment-error" : undefined}
@@ -221,6 +230,7 @@ export function ReservationForm() {
             id="time"
             name="time"
             label="Start time"
+            required
             onChange={setTime}
             invalid={showMissing && !time}
             describedBy={showMissing && !time ? "appointment-error" : undefined}
@@ -243,7 +253,7 @@ export function ReservationForm() {
 
       <div className="flex flex-col gap-2">
         <label htmlFor="notes" className={labelClasses}>
-          Anything we should know?
+          Anything we should know? <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>
         </label>
         <textarea
           id="notes"

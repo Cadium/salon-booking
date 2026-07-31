@@ -44,6 +44,7 @@ type DatePickerProps = {
   id?: string;
   name: string;
   label: string;
+  required?: boolean;
   /**
    * Hidden inputs are skipped by native form validation, so the form needs the
    * value surfaced to it in order to require a choice.
@@ -57,6 +58,7 @@ export function DatePicker({
   id,
   name,
   label,
+  required = false,
   onChange,
   invalid,
   describedBy,
@@ -104,6 +106,7 @@ export function DatePicker({
         className="text-xs font-medium uppercase tracking-[0.2em] text-magenta"
       >
         {label}
+        {required && <span aria-hidden="true" className="ml-1 text-magenta">*</span>}
       </label>
       <button
         id={fieldId}

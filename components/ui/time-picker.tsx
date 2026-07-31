@@ -9,6 +9,7 @@ type TimePickerProps = {
   id?: string;
   name: string;
   label: string;
+  required?: boolean;
   /**
    * Hidden inputs are skipped by native form validation, so the form needs the
    * value surfaced to it in order to require a choice.
@@ -22,6 +23,7 @@ export function TimePicker({
   id,
   name,
   label,
+  required = false,
   onChange,
   invalid,
   describedBy,
@@ -92,6 +94,7 @@ export function TimePicker({
         className="text-xs font-medium uppercase tracking-[0.2em] text-magenta"
       >
         {label}
+        {required && <span aria-hidden="true" className="ml-1 text-magenta">*</span>}
       </label>
       <button
         id={fieldId}
@@ -105,6 +108,7 @@ export function TimePicker({
         aria-haspopup="listbox"
         aria-controls={open ? listboxId : undefined}
         aria-invalid={invalid || undefined}
+        aria-required={required || undefined}
         aria-describedby={describedBy}
         className={`flex w-full cursor-pointer items-center justify-between border-0 border-b bg-transparent py-2 text-left text-base transition-colors focus-visible:border-magenta focus-visible:outline-none ${
           invalid ? "border-destructive" : "border-border"

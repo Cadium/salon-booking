@@ -49,6 +49,13 @@ var GOLD = "#C9A24B";
 var RULE = "#EADFE2";
 var MUTED = "#8A7176";
 
+// Run once from the Apps Script editor to grant the services used by bookings.
+function authorizeBookingServices() {
+  CalendarApp.getDefaultCalendar().getName();
+  MailApp.getRemainingDailyQuota();
+  getLogSheet().getSheetId();
+}
+
 // Booking acceptance and decline happen in this request, never manually.
 function doPost(e) {
   var params = requestParams(e);

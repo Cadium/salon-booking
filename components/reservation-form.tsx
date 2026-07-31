@@ -90,6 +90,7 @@ export function ReservationForm() {
   const startAnother = () => {
     setSubmitted(false);
     setErrored(false);
+    setIsSubmitting(false);
     setSelectedService(null);
     setDate(null);
     setTime(null);
@@ -136,6 +137,7 @@ export function ReservationForm() {
             body: new FormData(form),
           });
           if (!response.ok) throw new Error("Booking request failed");
+          setIsSubmitting(false);
           setSubmitted(true);
         } catch {
           setIsSubmitting(false);

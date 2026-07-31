@@ -137,7 +137,7 @@ function handleFormSubmission(data) {
       notifyAcceptedBooking(booking);
     } else {
       booking = logToSheet(received, data, token, STATUS_DECLINED);
-      booking.suggestedSlots = result.suggestedSlots;
+      booking.availableRanges = result.availableRanges;
       notifyDeclinedBooking(booking);
     }
   } catch (err) {
@@ -302,23 +302,24 @@ function reserveCalendarSlot(data) {
     isAvailable: events.length === 0,
     start: start,
     end: end,
-    suggestedSlots: events.length === 0 ? [] : findSuggestedSlots(data.date, start),
+    availableRanges: events.length === 0 ? [] : findAvailableRanges(data.date, start),
   };
 }
 
-function findSuggestedSlots(dateValue, requestedStart) {
-  var suggestions = [];
+function findAvailableRanges(dateValue, requestedStart) {
+  var ranges = [];
   var calendar = CalendarApp.getDefaultCalendar();
   var firstDay = datePartsFor(dateValue);
-  if (!firstDay) return suggestions;
+  if (!firstDay) return ranges;
 
-  // Offer the next three real openings, looking across the next seven days.
-  for (var dayOffset = 0; dayOffset < 7 && suggestions.length < 3; dayOffset++) {
+  // Show the next three days with availability, grouped into start-time ranges.
+  for (var dayOffset = 0, daysFound = 0; dayOffset < 7 && daysFound < 3; dayOffset++) {
     var current = new Date(Date.UTC(firstDay.year, firstDay.month - 1, firstDay.day + dayOffset));
     var dayValue = current.getUTCFullYear() + "-" +
       (current.getUTCMonth() + 1 < 10 ? "0" : "") + (current.getUTCMonth() + 1) + "-" +
       (current.getUTCDate() < 10 ? "0" : "") + current.getUTCDate();
 
+    var daySlots = [];
     for (var minutes = OPENING_HOUR * 60; minutes <= CLOSING_HOUR * 60; minutes += 30) {
       var hour = Math.floor(minutes / 60);
       var minute = minutes % 60;
@@ -330,13 +331,28 @@ function findSuggestedSlots(dateValue, requestedStart) {
         candidateStart.getTime() + LONGEST_SERVICE_HOURS * 60 * 60 * 1000
       );
       if (calendar.getEvents(candidateStart, candidateEnd).length === 0) {
-        suggestions.push({ date: dayValue, time: timeValue });
-        if (suggestions.length === 3) return suggestions;
+        daySlots.push({ start: candidateStart, time: timeValue });
       }
     }
+
+    if (!daySlots.length) continue;
+    daysFound++;
+    var rangeStart = daySlots[0];
+    var rangeEnd = daySlots[0];
+    for (var slotIndex = 1; slotIndex < daySlots.length; slotIndex++) {
+      var slot = daySlots[slotIndex];
+      if (slot.start.getTime() - rangeEnd.start.getTime() === 30 * 60 * 1000) {
+        rangeEnd = slot;
+      } else {
+        ranges.push({ date: dayValue, startTime: rangeStart.time, endTime: rangeEnd.time });
+        rangeStart = slot;
+        rangeEnd = slot;
+      }
+    }
+    ranges.push({ date: dayValue, startTime: rangeStart.time, endTime: rangeEnd.time });
   }
 
-  return suggestions;
+  return ranges;
 }
 
 function isBookableStartTime(timeValue) {
@@ -916,9 +932,7 @@ function buildConfirmedHtmlBody(booking) {
     "</strong> is fully confirmed. We are looking forward to seeing you.</p>" +
     '<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
     MUTED + ';">Please come with clean, dry and detangled hair unless a wash is ' +
-    "included in your service, and try to arrive on time so you get the full " +
-    "appointment. Set aside " + SHORTEST_SERVICE_HOURS + " to " + LONGEST_SERVICE_HOURS +
-    " hours depending on your length.</p>";
+    "included in your service, and try to arrive on time so you get the full appointment.</p>";
 
   return wrapEmailShell("Confirmed", "You are all set, " + booking.name, "", body);
 }
@@ -930,20 +944,20 @@ function buildConfirmedPlainBody(booking) {
       " is fully confirmed. We are looking forward to seeing you.",
     "",
     "Please come with clean, dry and detangled hair unless a wash is included in " +
-      "your service, and try to arrive on time so you get the full appointment. " +
-      "Set aside " + SHORTEST_SERVICE_HOURS + " to " + LONGEST_SERVICE_HOURS +
-      " hours depending on your length.",
+      "your service, and try to arrive on time so you get the full appointment.",
   ].join("\n");
 }
 
 function buildDeclinedHtmlBody(booking) {
-  var suggestions = booking.suggestedSlots || [];
-  var suggestionHtml = suggestions.length
+  var ranges = booking.availableRanges || [];
+  var availabilityHtml = ranges.length
     ? '<p style="margin:0 0 10px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
-      MUTED + ';">The next available appointment windows are:</p><ul style="margin:0 0 20px;padding-left:20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.8;color:' +
+      MUTED + ';">You can start an appointment at any half-hour within these available ranges:</p><ul style="margin:0 0 20px;padding-left:20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.8;color:' +
       INK_PLUM + ';">' +
-      suggestions.map(function(slot) {
-        return "<li>" + esc(formatWhen(slot.date, slot.time)) + "</li>";
+      ranges.map(function(range) {
+        return "<li>" + esc(formatDateOnly(range.date)) + ": " +
+          esc(formatTimeOnly(range.startTime)) + " to " +
+          esc(formatTimeOnly(range.endTime)) + "</li>";
       }).join("") + "</ul>"
     : '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
       MUTED + ';">There are no later openings in the next seven days. Please choose another date using the booking form.</p>';
@@ -952,7 +966,7 @@ function buildDeclinedHtmlBody(booking) {
     INK_PLUM + ';">The time you selected, <strong>' +
     esc(formatWhen(booking.date, booking.time) || "your requested appointment") +
     "</strong>, overlaps an appointment already on our calendar, so it is not available.</p>" +
-    suggestionHtml +
+    availabilityHtml +
     '<p style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:' +
     MUTED + ';">Please choose another available time or date using the booking form.</p>' +
     button(BOOKING_FORM_URL, "Choose another time", "primary");
@@ -966,10 +980,11 @@ function buildDeclinedPlainBody(booking) {
       (formatWhen(booking.date, booking.time) || "your requested appointment") +
       ", overlaps an appointment already on our calendar, so it is not available.",
   ];
-  if (booking.suggestedSlots && booking.suggestedSlots.length) {
-    lines.push("", "The next available appointment windows are:");
-    booking.suggestedSlots.forEach(function(slot) {
-      lines.push("- " + formatWhen(slot.date, slot.time));
+  if (booking.availableRanges && booking.availableRanges.length) {
+    lines.push("", "You can start an appointment at any half-hour within these available ranges:");
+    booking.availableRanges.forEach(function(range) {
+      lines.push("- " + formatDateOnly(range.date) + ": " +
+        formatTimeOnly(range.startTime) + " to " + formatTimeOnly(range.endTime));
     });
   }
   lines.push("", "Choose another available time or date here: " + BOOKING_FORM_URL);

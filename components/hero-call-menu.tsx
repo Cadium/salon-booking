@@ -44,7 +44,7 @@ export function HeroCallMenu() {
       <div
         role="menu"
         aria-label="Call the studio"
-        className={`absolute left-0 top-full z-20 mt-3 w-max min-w-[220px] border border-bone/30 bg-bone p-2 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.45)] transition-all duration-150 ease-out ${
+        className={`absolute right-0 top-full z-20 mt-3 w-[min(16.25rem,calc(100vw-3rem))] border border-bone/30 bg-bone p-2 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.45)] transition-all duration-150 ease-out sm:left-0 sm:right-auto ${
           open
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-1 opacity-0"

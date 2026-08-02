@@ -15,14 +15,14 @@ export type Service = {
   name: string;
   collection: CollectionId;
   description: string;
-  image: string;
-  alt: string;
+  image?: string;
+  alt?: string;
   /**
    * CSS object-position, tuned per photo. These are shot in a working studio,
    * so each crop is pulled toward the hair and away from the mirrors, fans and
    * trolleys sitting at the edges of frame.
    */
-  imagePosition: string;
+  imagePosition?: string;
   tiers: PriceTier[];
 };
 
@@ -218,9 +218,6 @@ export const services: Service[] = [
     collection: "cornrows-styled",
     description:
       "A careful braid removal with wash and detangling, priced by length and the time needed.",
-    image: "/images/styles/box-braids.jpeg",
-    alt: "Braided hair ready for a careful takedown service",
-    imagePosition: "50% 38%",
     tiers: [{ label: "Starts from", price: 80 }],
   },
 ];

@@ -2,7 +2,8 @@ export type CollectionId =
   | "boho-curls"
   | "twists"
   | "box-knotless"
-  | "cornrows-styled";
+  | "cornrows-styled"
+  | "takedown";
 
 export type PriceTier = {
   /** Length and, where it varies, braid size — e.g. "Small · Butt length". */
@@ -55,6 +56,12 @@ export const collections: Collection[] = [
     name: "Cornrows & Styled",
     blurb:
       "Patterned work at the crown, from Fulani sets to a sculpted ponytail.",
+  },
+  {
+    id: "takedown",
+    name: "Takedown",
+    blurb:
+      "Careful braid removal, washing and detangling, priced by length and the time needed.",
   },
 ];
 
@@ -215,7 +222,7 @@ export const services: Service[] = [
   {
     slug: "takedown",
     name: "Takedown",
-    collection: "cornrows-styled",
+    collection: "takedown",
     description:
       "A careful braid removal with wash and detangling, priced by length and the time needed.",
     tiers: [{ label: "Starts from", price: 80 }],

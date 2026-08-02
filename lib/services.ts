@@ -212,6 +212,17 @@ export const services: Service[] = [
     imagePosition: "45% 45%",
     tiers: [{ label: "", price: 280 }],
   },
+  {
+    slug: "takedown",
+    name: "Takedown",
+    collection: "cornrows-styled",
+    description:
+      "A careful braid removal with wash and detangling, priced by length and the time needed.",
+    image: "/images/styles/box-braids.jpeg",
+    alt: "Braided hair ready for a careful takedown service",
+    imagePosition: "50% 38%",
+    tiers: [{ label: "Starts from", price: 80 }],
+  },
 ];
 
 /** Lowest price across a style's length and size options. */

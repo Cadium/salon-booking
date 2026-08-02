@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { LinkButton, ButtonArrow } from "@/components/ui/button";
 import { ContactIcons } from "@/components/contact-icons";
+import { HeroCallMenu } from "@/components/hero-call-menu";
 import { gsap } from "@/lib/gsap";
 
 const prefersReducedMotion = () =>
@@ -144,11 +145,12 @@ export function HeroSection() {
             hands when your style calls for it.
           </p>
 
-          <div ref={ctasRef} className="mt-8 flex flex-wrap items-center gap-6">
+          <div ref={ctasRef} className="mt-8 flex flex-wrap items-center gap-4">
             <LinkButton href="#book" variant="inverse">
               Book your braids
               <ButtonArrow>↗</ButtonArrow>
             </LinkButton>
+            <HeroCallMenu />
             <a
               href="#services"
               className="reserve-link border-b border-bone/40 pb-1 text-sm text-bone transition-colors hover:border-rose-pop hover:text-rose-pop"

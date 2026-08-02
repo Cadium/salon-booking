@@ -9,7 +9,12 @@ export function ServiceCard({ service }: { service: Service }) {
   const hasTierTable = service.tiers.length > 1;
 
   return (
-    <article className="service-card group flex flex-col">
+    <a
+      href="#book"
+      onClick={() => setSelectedService(service.name)}
+      aria-label={`Reserve ${service.name}`}
+      className="service-card group flex cursor-pointer flex-col rounded-sm transition-transform duration-300 ease-out hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-magenta focus-visible:ring-offset-4"
+    >
       <div className="relative bg-ink-plum p-2">
         <div className="relative aspect-[3/4] w-full overflow-hidden">
           {service.image ? (
@@ -74,14 +79,10 @@ export function ServiceCard({ service }: { service: Service }) {
         </p>
       )}
 
-      <a
-        href="#book"
-        onClick={() => setSelectedService(service.name)}
-        className="reserve-link mt-6 inline-flex items-center gap-2 self-start border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
-      >
+      <span className="reserve-link mt-6 inline-flex items-center gap-2 self-start border-b border-foreground/40 pb-1 text-sm transition-colors group-hover:border-magenta group-hover:text-magenta">
         Reserve {service.name}
         <span aria-hidden>→</span>
-      </a>
-    </article>
+      </span>
+    </a>
   );
 }

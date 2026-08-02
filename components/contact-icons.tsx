@@ -12,15 +12,6 @@ const WHATSAPP_ICON = (
   />
 );
 
-const PHONE_ICON = (
-  <path
-    d="M6.5 4.5c.8-.3 1.7 0 2 .8l1 2.3c.3.6.1 1.4-.4 1.9l-1 .9c.6 1.7 1.9 3 3.6 3.6l.9-1c.5-.5 1.3-.7 1.9-.4l2.3 1c.8.3 1.1 1.2.8 2l-.5 1.2c-.3.8-1.1 1.3-2 1.2-5.3-.7-9.5-4.9-10.2-10.2-.1-.9.4-1.7 1.2-2l1.2-.5Z"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinejoin="round"
-  />
-);
-
 const EMAIL_ICON = (
   <>
     <rect
@@ -52,12 +43,11 @@ function Glyph({ children }: { children: React.ReactNode }) {
   );
 }
 
-type NumberMenu = "whatsapp" | "call";
+type NumberMenu = "whatsapp";
 
 /**
- * The studio has more than one line, so tapping WhatsApp or Call opens a
- * chooser rather than silently deciding for the visitor. With a single number
- * configured there is nothing to choose, so it links straight out instead.
+ * The studio has more than one line, so tapping WhatsApp opens a chooser
+ * rather than silently deciding for the visitor.
  */
 export function ContactIcons({ className = "" }: { className?: string }) {
   const [openMenu, setOpenMenu] = useState<NumberMenu | null>(null);
@@ -172,7 +162,6 @@ export function ContactIcons({ className = "" }: { className?: string }) {
   return (
     <div ref={rootRef} className={`flex items-center gap-3 ${className}`}>
       {renderPhoneAction("whatsapp", "Message on WhatsApp", WHATSAPP_ICON)}
-      {renderPhoneAction("call", "Call the studio", PHONE_ICON)}
       <div className="relative">
         <button
           type="button"

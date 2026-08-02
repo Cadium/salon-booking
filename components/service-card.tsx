@@ -9,27 +9,39 @@ export function ServiceCard({ service }: { service: Service }) {
   const hasTierTable = service.tiers.length > 1;
 
   return (
-    <article className="service-card group flex flex-col">
-      {/*
-        The photography is phone-shot in a working studio, so each image sits
-        matted inside a frame rather than running edge to edge — the mat and
-        the shared grade are what make eleven photos taken on different days
-        read as one collection.
-      */}
+    <a
+      href="#book"
+      onClick={() => setSelectedService(service.name)}
+      aria-label={`Reserve ${service.name}`}
+      className="service-card group flex cursor-pointer flex-col rounded-sm transition-transform duration-300 ease-out hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-magenta focus-visible:ring-offset-4"
+    >
       <div className="relative bg-ink-plum p-2">
         <div className="relative aspect-[3/4] w-full overflow-hidden">
-          <Image
-            src={service.image}
-            alt={service.alt}
-            fill
-            style={{ objectPosition: service.imagePosition }}
-            className="style-photo object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
-            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          />
-          {/* Warms and unifies the mixed lighting across the set. */}
-          <div className="pointer-events-none absolute inset-0 bg-magenta/10 mix-blend-multiply" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink-plum/50 to-transparent" />
-          {/* Gold hairline, inset like a picture mat. */}
+          {service.image ? (
+            <>
+              <Image
+                src={service.image}
+                alt={service.alt ?? service.name}
+                fill
+                style={{ objectPosition: service.imagePosition }}
+                className="style-photo object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-magenta/10 mix-blend-multiply" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink-plum/50 to-transparent" />
+            </>
+          ) : (
+            <div className="flex h-full flex-col justify-between bg-[radial-gradient(circle_at_80%_15%,rgba(255,157,189,0.32),transparent_30%),linear-gradient(145deg,#391d36_0%,#1e1220_70%)] p-7 text-bone">
+              <p className="text-xs tracking-[0.22em] text-rose-pop">RESET & CARE</p>
+              <div>
+                <p className="font-display text-5xl leading-none italic text-rose-pop">Takedown</p>
+                <p className="mt-4 max-w-[15rem] text-sm leading-relaxed text-bone/70">
+                  Remove, wash, detangle.
+                </p>
+              </div>
+              <span className="h-px w-12 bg-gold/70" />
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-2 border border-gold/30" />
         </div>
 
@@ -67,14 +79,10 @@ export function ServiceCard({ service }: { service: Service }) {
         </p>
       )}
 
-      <a
-        href="#book"
-        onClick={() => setSelectedService(service.name)}
-        className="reserve-link mt-6 inline-flex items-center gap-2 self-start border-b border-foreground/40 pb-1 text-sm transition-colors hover:border-magenta hover:text-magenta"
-      >
+      <span className="reserve-link mt-6 inline-flex items-center gap-2 self-start border-b border-foreground/40 pb-1 text-sm transition-colors group-hover:border-magenta group-hover:text-magenta">
         Reserve {service.name}
         <span aria-hidden>→</span>
-      </a>
-    </article>
+      </span>
+    </a>
   );
 }

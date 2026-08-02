@@ -2,7 +2,8 @@ export type CollectionId =
   | "boho-curls"
   | "twists"
   | "box-knotless"
-  | "cornrows-styled";
+  | "cornrows-styled"
+  | "takedown";
 
 export type PriceTier = {
   /** Length and, where it varies, braid size — e.g. "Small · Butt length". */
@@ -15,14 +16,14 @@ export type Service = {
   name: string;
   collection: CollectionId;
   description: string;
-  image: string;
-  alt: string;
+  image?: string;
+  alt?: string;
   /**
    * CSS object-position, tuned per photo. These are shot in a working studio,
    * so each crop is pulled toward the hair and away from the mirrors, fans and
    * trolleys sitting at the edges of frame.
    */
-  imagePosition: string;
+  imagePosition?: string;
   tiers: PriceTier[];
 };
 
@@ -55,6 +56,12 @@ export const collections: Collection[] = [
     name: "Cornrows & Styled",
     blurb:
       "Patterned work at the crown, from Fulani sets to a sculpted ponytail.",
+  },
+  {
+    id: "takedown",
+    name: "Takedown",
+    blurb:
+      "Careful braid removal, washing and detangling, priced by length and the time needed.",
   },
 ];
 
@@ -211,6 +218,14 @@ export const services: Service[] = [
     alt: "Cornrows gathered into a long braided ponytail",
     imagePosition: "45% 45%",
     tiers: [{ label: "", price: 280 }],
+  },
+  {
+    slug: "takedown",
+    name: "Takedown",
+    collection: "takedown",
+    description:
+      "A careful braid removal with wash and detangling, priced by length and the time needed.",
+    tiers: [{ label: "Starts from", price: 80 }],
   },
 ];
 

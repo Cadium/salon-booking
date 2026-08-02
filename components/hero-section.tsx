@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { LinkButton, ButtonArrow } from "@/components/ui/button";
 import { ContactIcons } from "@/components/contact-icons";
+import { HeroCallMenu } from "@/components/hero-call-menu";
 import { gsap } from "@/lib/gsap";
 
 const prefersReducedMotion = () =>
@@ -112,7 +113,7 @@ export function HeroSection() {
         aria-hidden
         className="absolute right-3 top-0 z-10 hidden -translate-y-1/2 rotate-180 text-xs tracking-[0.3em] text-rose-pop/60 [writing-mode:vertical-rl] md:block"
       >
-        Nº 007 — BRAIDED WITH INTENTION
+        Nº 007 · BRAIDED WITH INTENTION
       </span>
 
       <div className="relative z-10 mx-auto w-full max-w-[1400px] px-6 py-24 md:px-10">
@@ -139,16 +140,17 @@ export function HeroSection() {
             ref={bodyRef}
             className="hero-description mt-6 max-w-md text-lg text-bone/75"
           >
-            HAIRBYBELLES is a braiding studio in Garland, Texas — over ten
+            HAIRBYBELLES is a braiding studio in Garland, Texas, with over ten
             years of clean parts, gentle tension, and more than one pair of
             hands when your style calls for it.
           </p>
 
-          <div ref={ctasRef} className="mt-8 flex flex-wrap items-center gap-6">
+          <div ref={ctasRef} className="mt-8 flex flex-wrap items-center gap-4">
             <LinkButton href="#book" variant="inverse">
               Book your braids
               <ButtonArrow>↗</ButtonArrow>
             </LinkButton>
+            <HeroCallMenu />
             <a
               href="#services"
               className="reserve-link border-b border-bone/40 pb-1 text-sm text-bone transition-colors hover:border-rose-pop hover:text-rose-pop"

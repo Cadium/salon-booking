@@ -5,7 +5,7 @@ const POLICIES = [
   {
     title: "Booking & deposits",
     description:
-      "A $30 non-refundable deposit holds your slot — the same for every style — and comes off your total on the day. Send it by Zelle, Cash App, or Apple Pay.",
+      "A $30 non-refundable deposit holds your slot, the same for every style, and comes off your total on the day. Send it by Zelle, Cash App, or Apple Pay.",
   },
   {
     title: "Cancellations",
@@ -15,7 +15,7 @@ const POLICIES = [
   {
     title: "Arrival",
     description:
-      "Clean, dry, detangled hair unless a wash is included, and on time — more than 15 minutes late may require rescheduling.",
+      "Clean, dry, detangled hair unless a wash is included, and on time. More than 15 minutes late may require rescheduling.",
   },
   {
     title: "Hair color",

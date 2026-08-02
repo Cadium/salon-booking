@@ -40,7 +40,7 @@ export function StudioSection() {
             <p className="mt-6 max-w-lg text-muted-foreground">
               HAIRBYBELLES has been braiding in Garland for over ten years.
               Depending on the style and the length you&apos;re going for,
-              more than one braider can work on your hair at once — so a full
+              more than one braider can work on your hair at once, so a full
               head that would otherwise take all day gets finished in a
               fraction of the time.
             </p>

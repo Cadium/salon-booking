@@ -29,7 +29,7 @@ export const STUDIO = {
     postalCode: "75042",
   },
 
-  hoursDisplay: "Mon – Sat · 7am – 7pm",
+  hoursDisplay: "Mon to Sat · 7am to 7pm",
 } as const;
 
 export const STUDIO_ADDRESS_LINES = [

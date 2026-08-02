@@ -118,14 +118,18 @@ html {
   }
 }
 
-/* Ambient drift for the Takedown card's glow, in place of a photo. */
+/*
+  Ambient drift for the Takedown card's glow, in place of a photo. First pass
+  ran a 9s loop over 14px, which read as static at a glance; a blurred glow
+  needs a bigger, faster move to be legible as motion rather than noise.
+*/
 @keyframes orb-float {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(-14px, 16px) scale(1.08);
+    transform: translate(-26px, 24px) scale(1.14);
   }
 }
 

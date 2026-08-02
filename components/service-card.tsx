@@ -36,7 +36,7 @@ export function ServiceCard({ service }: { service: Service }) {
                   own loop. Splitting them keeps the two transforms from
                   fighting over the same element. */}
               <div className="pointer-events-none absolute -top-12 right-[-3rem] h-64 w-64 transition-transform duration-[900ms] ease-out group-hover:scale-110">
-                <div className="h-full w-full rounded-full bg-rose-pop/30 blur-3xl motion-safe:animate-[orb-float_9s_ease-in-out_infinite]" />
+                <div className="h-full w-full rounded-full bg-rose-pop/30 blur-3xl motion-safe:animate-[orb-float_5s_ease-in-out_infinite]" />
               </div>
               <p className="relative text-xs tracking-[0.22em] text-rose-pop">RESET & CARE</p>
               <div className="relative">

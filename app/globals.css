@@ -118,6 +118,17 @@ html {
   }
 }
 
+/* Ambient drift for the Takedown card's glow, in place of a photo. */
+@keyframes orb-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-14px, 16px) scale(1.08);
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

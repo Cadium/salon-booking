@@ -119,9 +119,10 @@ html {
 }
 
 /*
-  Ambient drift for the Takedown card's glow, in place of a photo. First pass
-  ran a 9s loop over 14px, which read as static at a glance; a blurred glow
-  needs a bigger, faster move to be legible as motion rather than noise.
+  Ambient drift for the Takedown card's glow, in place of a photo. Two passes
+  before this were still too slow to read as motion at a glance (9s/14px,
+  then 5s/26px); ease-in-out keeps it feeling deliberate rather than jittery
+  even at this pace, which is what keeps it premium instead of gimmicky.
 */
 @keyframes orb-float {
   0%,
@@ -129,7 +130,7 @@ html {
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(-26px, 24px) scale(1.14);
+    transform: translate(-30px, 28px) scale(1.16);
   }
 }
 
